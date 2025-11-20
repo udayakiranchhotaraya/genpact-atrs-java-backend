@@ -91,7 +91,7 @@ public class AirlineRepositoryImplDAO implements AirlineRepositoryDAO {
     }
 
     public Airline update(Airline airline) {
-        String sql = "UPDATE airlines SET airline_name = ?, country = ?, logo_url = ?, updated_at = CURRENT_TIMESTAMP WHERE airlines_uuid = ?";
+        String sql = "UPDATE airlines SET airline_name = ?, country = ?, logo_url = ?, updated_at = CURRENT_TIMESTAMP WHERE airlines_uuid = ? AND is_deleted = false";
 
         jdbcTemplate.update(sql,
                 airline.getAirlineName(),
@@ -100,6 +100,12 @@ public class AirlineRepositoryImplDAO implements AirlineRepositoryDAO {
                 airline.getAirlineUUID()
         );
         return airline;
+    }
+
+    public int softDeleteByUUID(String airlineUUID) {
+        String sql = "UPDATE airlines SET is_deleted = true, updated_at = CURRENT_TIMESTAMP WHERE airlines_uuid = ? AND is_deleted = false";
+
+        return jdbcTemplate.update(sql, airlineUUID);
     }
 
     public boolean existsByAirlineCode(String airlineCode) {

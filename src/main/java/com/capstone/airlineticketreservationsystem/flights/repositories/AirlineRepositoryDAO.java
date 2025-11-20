@@ -11,5 +11,6 @@ public interface AirlineRepositoryDAO {
     public Optional<Airline> findByAirlineUUID(String airlineUuid);
     public Optional<Airline> findByAirlineCode(String airlineCode);
     public Airline update(Airline airline);
+    public int softDeleteByUUID(String airlineUUID);
     public boolean existsByAirlineCode(String airlineCode);
 }

@@ -3,6 +3,7 @@ package com.capstone.airlineticketreservationsystem.flights.services;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.capstone.airlineticketreservationsystem.flights.exceptions.AirlineAlreadyDeletedException;
 import org.springframework.stereotype.Service;
 
 import com.capstone.airlineticketreservationsystem.flights.dtos.AirlineDTO;
@@ -70,24 +71,43 @@ public class AirlineService {
         return convertToDTO(airline);
     }
 
-    public AirlineDTO updateAirline(String airlineUuid, UpdateAirlineRequest request) {
+    public AirlineDTO updateAirline(String airlineUUID, UpdateAirlineRequest updateAirlineRequest) {
         // Finding the existing airline
-        Airline existingAirline = airlineRepositoryDAO.findByAirlineUUID(airlineUuid)
-                .orElseThrow(() -> new AirlineNotFoundException("Airline not found with UUID: " + airlineUuid));
+        Airline existingAirline = airlineRepositoryDAO.findByAirlineUUID(airlineUUID)
+                .orElseThrow(() -> new AirlineNotFoundException("Airline not found with UUID: " + airlineUUID));
 
         // Manually checking and updating each provided field
-        if (request.getAirlineName() != null) {
-            existingAirline.setAirlineName(request.getAirlineName());
+        if (updateAirlineRequest.getAirlineName() != null) {
+            existingAirline.setAirlineName(updateAirlineRequest.getAirlineName());
         }
-        if (request.getCountry() != null) {
-            existingAirline.setCountry(request.getCountry());
+        if (updateAirlineRequest.getCountry() != null) {
+            existingAirline.setCountry(updateAirlineRequest.getCountry());
         }
-        if (request.getLogoUrl() != null) {
-            existingAirline.setLogoURL(request.getLogoUrl());
+        if (updateAirlineRequest.getLogoUrl() != null) {
+            existingAirline.setLogoURL(updateAirlineRequest.getLogoUrl());
         }
 
         Airline updatedAirline = airlineRepositoryDAO.update(existingAirline);
         return convertToDTO(updatedAirline);
+    }
+
+    public void deleteAirline(String airlineUUID) {
+        // Verify the airline exists and is not already deleted
+        Airline existingAirline = airlineRepositoryDAO.findByAirlineUUID(airlineUUID)
+                .orElseThrow(() -> new AirlineNotFoundException(
+                        "Airline not found with UUID: " + airlineUUID));
+
+        // Checking if already deleted
+        if (existingAirline.getDeleted()) {
+            throw new AirlineAlreadyDeletedException(
+                    "Airline with UUID: " + airlineUUID + " is already deleted");
+        }
+
+        int rowsAffected = airlineRepositoryDAO.softDeleteByUUID(airlineUUID);
+
+        if (rowsAffected == 0) {
+            throw new RuntimeException("Failed to delete airline");
+        }
     }
 
     private AirlineDTO convertToDTO(Airline airline) {

@@ -1,6 +1,9 @@
 package com.capstone.airlineticketreservationsystem.flights.controllers;
 
+import java.time.Instant;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -50,9 +53,21 @@ public class AirlineController {
     @PutMapping(value = "/{airlineUUID}")
     public ResponseEntity<AirlineDTO> updateAirline(
             @PathVariable String airlineUUID,
-            @Valid @RequestBody UpdateAirlineRequest request) {
+            @Valid @RequestBody UpdateAirlineRequest updateAirlineRequest) {
 
-        AirlineDTO updatedAirline = airlineService.updateAirline(airlineUUID, request);
+        AirlineDTO updatedAirline = airlineService.updateAirline(airlineUUID, updateAirlineRequest);
         return new ResponseEntity<>(updatedAirline, HttpStatus.OK);
+    }
+
+    @DeleteMapping(value = "/{airlineUUID}")
+    public ResponseEntity<Map<String, String>> deleteAirline(@PathVariable String airlineUUID) {
+        airlineService.deleteAirline(airlineUUID);
+
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "Airline deleted successfully");
+        response.put("airlineUuid", airlineUUID);
+        response.put("timestamp", Instant.now().toString());
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }
