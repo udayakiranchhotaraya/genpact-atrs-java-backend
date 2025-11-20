@@ -1,9 +1,14 @@
 package com.capstone.airlineticketreservationsystem.flights.repositories;
 
 import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.List;
+import java.util.Optional;
 
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 
@@ -49,5 +54,38 @@ public class AircraftTypeRepositoryImplDAO implements AircraftTypeRepositoryDAO 
             }, key.longValue());
         }
         throw new RuntimeException("Failed to insert aircraft type and retrieve generated ID.");
+    }
+
+    public List<AircraftType> findAll() {
+        String sql = "SELECT * FROM aircraft_types WHERE is_deleted = false ORDER BY manufacturer, aircraft_model";
+        return jdbcTemplate.query(sql, new AircraftTypeRowMapper());
+    }
+
+    public Optional<AircraftType> findByAircraftTypeUUID(String aircraftTypeUUID) {
+        String sql = "SELECT * FROM aircraft_types WHERE aircraft_types_uuid = ? AND is_deleted = false";
+        try {
+            AircraftType aircraftType = jdbcTemplate.queryForObject(sql, new AircraftTypeRowMapper(), aircraftTypeUUID);
+            return Optional.ofNullable(aircraftType);
+        } catch (EmptyResultDataAccessException e) {
+            return Optional.empty();
+        }
+    }
+
+    private static class AircraftTypeRowMapper implements RowMapper<AircraftType> {
+        @Override
+        public AircraftType mapRow(java.sql.ResultSet rs, int rowNum) throws SQLException {
+            AircraftType aircraftType = new AircraftType();
+            aircraftType.setId(rs.getLong("id"));
+            aircraftType.setAircraftTypeUUID(rs.getString("aircraft_types_uuid"));
+            aircraftType.setAircraftModel(rs.getString("aircraft_model"));
+            aircraftType.setManufacturer(rs.getString("manufacturer"));
+            aircraftType.setTotalSeats(rs.getInt("total_seats"));
+            aircraftType.setBusinessClassSeats(rs.getInt("business_class_seats"));
+            aircraftType.setEconomyClassSeats(rs.getInt("economy_class_seats"));
+            aircraftType.setDeleted(rs.getBoolean("is_deleted"));
+            aircraftType.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
+            aircraftType.setUpdatedAt(rs.getTimestamp("updated_at").toLocalDateTime());
+            return aircraftType;
+        }
     }
 }
