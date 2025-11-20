@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 import com.capstone.airlineticketreservationsystem.flights.dtos.AirlineDTO;
 import com.capstone.airlineticketreservationsystem.flights.dtos.CreateAirlineRequest;
+import com.capstone.airlineticketreservationsystem.flights.dtos.UpdateAirlineRequest;
 import com.capstone.airlineticketreservationsystem.flights.services.AirlineService;
 
 @RestController
@@ -33,7 +34,7 @@ public class AirlineController {
     }
 
     // Get airline by UUID
-    @GetMapping(value = "/{airlineUuid}")
+    @GetMapping(value = "/{airlineUUID}")
     public ResponseEntity<AirlineDTO> getAirlineByUUID(@PathVariable String airlineUUID) {
         AirlineDTO airline = airlineService.getAirlineByUUID(airlineUUID);
         return new ResponseEntity<>(airline, HttpStatus.OK);
@@ -44,5 +45,14 @@ public class AirlineController {
     public ResponseEntity<AirlineDTO> getAirlineByCode(@PathVariable String airlineCode) {
         AirlineDTO airline = airlineService.getAirlineByCode(airlineCode);
         return new ResponseEntity<>(airline, HttpStatus.OK);
+    }
+
+    @PutMapping(value = "/{airlineUUID}")
+    public ResponseEntity<AirlineDTO> updateAirline(
+            @PathVariable String airlineUUID,
+            @Valid @RequestBody UpdateAirlineRequest request) {
+
+        AirlineDTO updatedAirline = airlineService.updateAirline(airlineUUID, request);
+        return new ResponseEntity<>(updatedAirline, HttpStatus.OK);
     }
 }

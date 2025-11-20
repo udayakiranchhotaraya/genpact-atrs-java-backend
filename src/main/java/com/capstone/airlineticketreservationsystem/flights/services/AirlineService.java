@@ -3,11 +3,12 @@ package com.capstone.airlineticketreservationsystem.flights.services;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.capstone.airlineticketreservationsystem.flights.exceptions.AirlineAlreadyExistsException;
 import org.springframework.stereotype.Service;
 
 import com.capstone.airlineticketreservationsystem.flights.dtos.AirlineDTO;
 import com.capstone.airlineticketreservationsystem.flights.dtos.CreateAirlineRequest;
+import com.capstone.airlineticketreservationsystem.flights.dtos.UpdateAirlineRequest;
+import com.capstone.airlineticketreservationsystem.flights.exceptions.AirlineAlreadyExistsException;
 import com.capstone.airlineticketreservationsystem.flights.exceptions.AirlineNotFoundException;
 import com.capstone.airlineticketreservationsystem.flights.models.Airline;
 import com.capstone.airlineticketreservationsystem.flights.repositories.AirlineRepositoryDAO;
@@ -67,6 +68,26 @@ public class AirlineService {
                 .orElseThrow(() -> new AirlineNotFoundException(
                         "Airline not found with code: " + airlineCode));
         return convertToDTO(airline);
+    }
+
+    public AirlineDTO updateAirline(String airlineUuid, UpdateAirlineRequest request) {
+        // Finding the existing airline
+        Airline existingAirline = airlineRepositoryDAO.findByAirlineUUID(airlineUuid)
+                .orElseThrow(() -> new AirlineNotFoundException("Airline not found with UUID: " + airlineUuid));
+
+        // Manually checking and updating each provided field
+        if (request.getAirlineName() != null) {
+            existingAirline.setAirlineName(request.getAirlineName());
+        }
+        if (request.getCountry() != null) {
+            existingAirline.setCountry(request.getCountry());
+        }
+        if (request.getLogoUrl() != null) {
+            existingAirline.setLogoURL(request.getLogoUrl());
+        }
+
+        Airline updatedAirline = airlineRepositoryDAO.update(existingAirline);
+        return convertToDTO(updatedAirline);
     }
 
     private AirlineDTO convertToDTO(Airline airline) {

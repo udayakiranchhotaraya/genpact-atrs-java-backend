@@ -10,5 +10,6 @@ public interface AirlineRepositoryDAO {
     public List<Airline> findAll();
     public Optional<Airline> findByAirlineUUID(String airlineUuid);
     public Optional<Airline> findByAirlineCode(String airlineCode);
+    public Airline update(Airline airline);
     public boolean existsByAirlineCode(String airlineCode);
 }

@@ -90,6 +90,18 @@ public class AirlineRepositoryImplDAO implements AirlineRepositoryDAO {
         }
     }
 
+    public Airline update(Airline airline) {
+        String sql = "UPDATE airlines SET airline_name = ?, country = ?, logo_url = ?, updated_at = CURRENT_TIMESTAMP WHERE airlines_uuid = ?";
+
+        jdbcTemplate.update(sql,
+                airline.getAirlineName(),
+                airline.getCountry(),
+                airline.getLogoURL(),
+                airline.getAirlineUUID()
+        );
+        return airline;
+    }
+
     public boolean existsByAirlineCode(String airlineCode) {
         String sql = "SELECT COUNT(*) FROM airlines WHERE airline_code = ? AND is_deleted = false";
         Integer count = jdbcTemplate.queryForObject(sql, Integer.class, airlineCode);
