@@ -18,6 +18,16 @@ public class AirlineDTO {
         this.createdAt = createdAt;
     }
 
+    public AirlineDTO(String airlineUUID, String airlineCode, String airlineName, String country, String logoURL, LocalDateTime createdAt, LocalDateTime updatedAt) {
+        this.airlineUUID = airlineUUID;
+        this.airlineCode = airlineCode;
+        this.airlineName = airlineName;
+        this.country = country;
+        this.logoURL = logoURL;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+    }
+
     private String airlineUUID;
     private String airlineCode;
     private String airlineName;
@@ -26,6 +36,9 @@ public class AirlineDTO {
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdAt;
+
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime updatedAt;
 
     public String getAirlineUUID() {
         return airlineUUID;
@@ -73,5 +86,13 @@ public class AirlineDTO {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
     }
 }
