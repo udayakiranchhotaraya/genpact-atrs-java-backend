@@ -28,7 +28,6 @@ CREATE TABLE airlines (
 CREATE TABLE aircraft_types (
     id BIGINT UNSIGNED AUTO_INCREMENT,
     aircraft_types_uuid VARCHAR(36) NOT NULL,
-    airline_id BIGINT UNSIGNED NOT NULL,
     aircraft_model VARCHAR(50) NOT NULL COMMENT 'e.g., Boeing 737-800, Airbus A320',
     manufacturer VARCHAR(50) NOT NULL,
     total_seats SMALLINT UNSIGNED NOT NULL,
@@ -40,9 +39,7 @@ CREATE TABLE aircraft_types (
 
     CONSTRAINT pk_aircraft_types PRIMARY KEY (id),
     CONSTRAINT uq_aircraft_types_uuid UNIQUE (aircraft_types_uuid),
-    CONSTRAINT fk_aircraft_types_airline FOREIGN KEY (airline_id)
-        REFERENCES airlines(id) ON DELETE RESTRICT ON UPDATE CASCADE,
-    INDEX idx_aircraft_types_airline (airline_id, is_deleted)
+    INDEX idx_aircraft_types_model ON aircraft_types(manufacturer, aircraft_model)
 );
 
 -- Airports Table
