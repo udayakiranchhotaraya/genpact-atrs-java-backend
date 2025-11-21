@@ -2,6 +2,7 @@ package com.capstone.airlineticketreservationsystem.flights.controllers;
 
 import com.capstone.airlineticketreservationsystem.flights.dtos.AirportDTO;
 import com.capstone.airlineticketreservationsystem.flights.dtos.CreateAirportRequest;
+import com.capstone.airlineticketreservationsystem.flights.dtos.UpdateAirportRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -56,5 +57,14 @@ public class AirportController {
     public ResponseEntity<List<AirportDTO>> searchAirports(@RequestParam String q) {
         List<AirportDTO> airports = airportService.searchAirports(q);
         return new ResponseEntity<>(airports, HttpStatus.OK);
+    }
+
+    @PutMapping(value = "/{airportUUID}")
+    public ResponseEntity<AirportDTO> updateAirport(
+            @PathVariable String airportUUID,
+            @Valid @RequestBody UpdateAirportRequest request) {
+
+        AirportDTO updatedAirport = airportService.updateAirport(airportUUID, request);
+        return new ResponseEntity<>(updatedAirport, HttpStatus.OK);
     }
 }

@@ -7,6 +7,7 @@ import java.sql.Statement;
 import java.util.List;
 import java.util.Optional;
 
+import com.capstone.airlineticketreservationsystem.flights.exceptions.AirportNotFoundException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
@@ -104,12 +105,28 @@ public class AirportRepositoryImplDAO implements AirportRepositoryDAO {
         return jdbcTemplate.query(sql, new AirportRowMapper(), likeTerm, likeTerm, likeTerm, likeTerm);
     }
 
+    public Airport update(Airport airport) {
+        String sql = "UPDATE airports SET airport_name = ?, city = ?, country = ?, timezone = ? WHERE airports_uuid = ? AND is_deleted = false";
+
+        int rowsAffected = jdbcTemplate.update(sql,
+                airport.getAirportName(),
+                airport.getCity(),
+                airport.getCountry(),
+                airport.getTimezone(),
+                airport.getAirportUUID()
+        );
+
+        if (rowsAffected == 0) {
+            throw new AirportNotFoundException("Airport not found or already deleted");
+        }
+        return airport;
+    }
+
     public boolean existsByAirportCode(String airportCode) {
         String sql = "SELECT COUNT(*) FROM airports WHERE UPPER(airport_code) = UPPER(?) AND is_deleted = false";
         Integer count = jdbcTemplate.queryForObject(sql, Integer.class, airportCode);
         return count != null && count > 0;
     }
-
 
     private static class AirportRowMapper implements RowMapper<Airport> {
         @Override

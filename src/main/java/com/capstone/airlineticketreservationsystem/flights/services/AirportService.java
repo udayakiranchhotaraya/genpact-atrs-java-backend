@@ -1,5 +1,6 @@
 package com.capstone.airlineticketreservationsystem.flights.services;
 
+import com.capstone.airlineticketreservationsystem.flights.dtos.UpdateAirportRequest;
 import org.springframework.stereotype.Service;
 
 import com.capstone.airlineticketreservationsystem.flights.dtos.AirportDTO;
@@ -85,6 +86,28 @@ public class AirportService {
         return airports.stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
+    }
+
+    public AirportDTO updateAirport(String airportUUID, UpdateAirportRequest updateAirportRequest) {
+
+        Airport existingAirport = airportRepository.findByAirportUUID(airportUUID)
+                .orElseThrow(() -> new AirportNotFoundException("Airport not found with UUID: " + airportUUID));
+
+        if (updateAirportRequest.getAirportName() != null) {
+            existingAirport.setAirportName(updateAirportRequest.getAirportName());
+        }
+        if (updateAirportRequest.getCity() != null) {
+            existingAirport.setCity(updateAirportRequest.getCity());
+        }
+        if (updateAirportRequest.getCountry() != null) {
+            existingAirport.setCountry(updateAirportRequest.getCountry());
+        }
+        if (updateAirportRequest.getTimezone() != null) {
+            existingAirport.setTimezone(updateAirportRequest.getTimezone());
+        }
+
+        Airport updatedAirport = airportRepository.update(existingAirport);
+        return convertToDTO(updatedAirport);
     }
 
     private AirportDTO convertToDTO(Airport airport) {

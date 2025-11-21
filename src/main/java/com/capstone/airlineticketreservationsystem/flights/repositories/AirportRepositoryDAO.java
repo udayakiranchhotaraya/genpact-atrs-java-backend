@@ -11,8 +11,8 @@ public interface AirportRepositoryDAO {
     public Optional<Airport> findByAirportUUID(String airportUUID);
     public Optional<Airport> findByAirportCode(String airportCode);
     public List<Airport> findByAirportName(String name);
-
     public List<Airport> findByCity(String city);
     public List<Airport> searchAirports(String searchTerm);
+    public Airport update(Airport airport);
     public boolean existsByAirportCode(String airportCode);
 }
