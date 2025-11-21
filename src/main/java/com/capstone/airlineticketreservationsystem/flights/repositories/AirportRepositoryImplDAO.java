@@ -122,9 +122,22 @@ public class AirportRepositoryImplDAO implements AirportRepositoryDAO {
         return airport;
     }
 
+    public int softDeleteByUUID(String airportUUID) {
+        String sql = "UPDATE airports SET is_deleted = true, updated_at = CURRENT_TIMESTAMP " +
+                "WHERE airports_uuid = ? AND is_deleted = false";
+
+        return jdbcTemplate.update(sql, airportUUID);
+    }
+
     public boolean existsByAirportCode(String airportCode) {
         String sql = "SELECT COUNT(*) FROM airports WHERE UPPER(airport_code) = UPPER(?) AND is_deleted = false";
         Integer count = jdbcTemplate.queryForObject(sql, Integer.class, airportCode);
+        return count != null && count > 0;
+    }
+
+    public boolean existsByUUIDAndNotDeleted(String airportUUID) {
+        String sql = "SELECT COUNT(*) FROM airports WHERE airports_uuid = ? AND is_deleted = false";
+        Integer count = jdbcTemplate.queryForObject(sql, Integer.class, airportUUID);
         return count != null && count > 0;
     }
 

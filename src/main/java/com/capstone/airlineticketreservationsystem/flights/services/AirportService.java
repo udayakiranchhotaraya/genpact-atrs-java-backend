@@ -1,10 +1,11 @@
 package com.capstone.airlineticketreservationsystem.flights.services;
 
-import com.capstone.airlineticketreservationsystem.flights.dtos.UpdateAirportRequest;
 import org.springframework.stereotype.Service;
 
 import com.capstone.airlineticketreservationsystem.flights.dtos.AirportDTO;
 import com.capstone.airlineticketreservationsystem.flights.dtos.CreateAirportRequest;
+import com.capstone.airlineticketreservationsystem.flights.dtos.UpdateAirportRequest;
+import com.capstone.airlineticketreservationsystem.flights.exceptions.AirportAlreadyDeletedException;
 import com.capstone.airlineticketreservationsystem.flights.exceptions.AirportAlreadyExistsException;
 import com.capstone.airlineticketreservationsystem.flights.exceptions.AirportNotFoundException;
 import com.capstone.airlineticketreservationsystem.flights.models.Airport;
@@ -108,6 +109,19 @@ public class AirportService {
 
         Airport updatedAirport = airportRepository.update(existingAirport);
         return convertToDTO(updatedAirport);
+    }
+
+    public void deleteAirportByUUID(String airportUUID) {
+
+        if (!airportRepository.existsByUUIDAndNotDeleted(airportUUID)) {
+            throw new AirportNotFoundException("Airport not found with UUID: " + airportUUID);
+        }
+
+        int rowsAffected = airportRepository.softDeleteByUUID(airportUUID);
+
+        if (rowsAffected == 0) {
+            throw new AirportAlreadyDeletedException("Airport with UUID: " + airportUUID + " is already deleted");
+        }
     }
 
     private AirportDTO convertToDTO(Airport airport) {

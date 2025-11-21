@@ -14,5 +14,7 @@ public interface AirportRepositoryDAO {
     public List<Airport> findByCity(String city);
     public List<Airport> searchAirports(String searchTerm);
     public Airport update(Airport airport);
+    public int softDeleteByUUID(String airportUUID);
     public boolean existsByAirportCode(String airportCode);
+    public boolean existsByUUIDAndNotDeleted(String airportUUID);
 }

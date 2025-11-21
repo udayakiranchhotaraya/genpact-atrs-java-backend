@@ -10,7 +10,10 @@ import org.springframework.web.bind.annotation.*;
 
 import com.capstone.airlineticketreservationsystem.flights.services.AirportService;
 
+import java.time.Instant;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/airports")
@@ -66,5 +69,18 @@ public class AirportController {
 
         AirportDTO updatedAirport = airportService.updateAirport(airportUUID, request);
         return new ResponseEntity<>(updatedAirport, HttpStatus.OK);
+    }
+
+    @DeleteMapping(value = "/{airportUUID}")
+    public ResponseEntity<Map<String, String>> deleteAirport(@PathVariable String airportUUID) {
+
+        airportService.deleteAirportByUUID(airportUUID);
+
+        Map<String, String> response = new LinkedHashMap<>();
+        response.put("message", "Airport deleted successfully");
+        response.put("airportUUID", airportUUID);
+        response.put("timestamp", Instant.now().toString());
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }
