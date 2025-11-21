@@ -3,7 +3,6 @@ package com.capstone.airlineticketreservationsystem.flights.services;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.capstone.airlineticketreservationsystem.flights.exceptions.AirlineAlreadyDeletedException;
 import org.springframework.stereotype.Service;
 
 import com.capstone.airlineticketreservationsystem.flights.dtos.AirlineDTO;
@@ -58,8 +57,7 @@ public class AirlineService {
     // Get airline by UUID
     public AirlineDTO getAirlineByUUID(String airlineUUID) {
         Airline airline = airlineRepositoryDAO.findByAirlineUUID(airlineUUID)
-                .orElseThrow(() -> new AirlineNotFoundException(
-                        "Airline not found with UUID: " + airlineUUID));
+                .orElseThrow(() -> new AirlineNotFoundException("Airline not found with UUID: " + airlineUUID));
         return convertToDTO(airline);
     }
 
@@ -94,14 +92,7 @@ public class AirlineService {
     public void deleteAirline(String airlineUUID) {
         // Verify the airline exists and is not already deleted
         Airline existingAirline = airlineRepositoryDAO.findByAirlineUUID(airlineUUID)
-                .orElseThrow(() -> new AirlineNotFoundException(
-                        "Airline not found with UUID: " + airlineUUID));
-
-        // Checking if already deleted
-        if (existingAirline.getDeleted()) {
-            throw new AirlineAlreadyDeletedException(
-                    "Airline with UUID: " + airlineUUID + " is already deleted");
-        }
+                .orElseThrow(() -> new AirlineNotFoundException("Airline not found with UUID: " + airlineUUID));
 
         int rowsAffected = airlineRepositoryDAO.softDeleteByUUID(airlineUUID);
 

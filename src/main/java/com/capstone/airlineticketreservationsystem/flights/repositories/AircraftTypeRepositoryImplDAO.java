@@ -12,6 +12,7 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 
+import com.capstone.airlineticketreservationsystem.flights.exceptions.AircraftTypeNotFoundException;
 import com.capstone.airlineticketreservationsystem.flights.models.AircraftType;
 
 import static com.capstone.airlineticketreservationsystem.utilities.UUIDV7Generator.generateUUIDV7;
@@ -69,6 +70,36 @@ public class AircraftTypeRepositoryImplDAO implements AircraftTypeRepositoryDAO 
         } catch (EmptyResultDataAccessException e) {
             return Optional.empty();
         }
+    }
+
+    public AircraftType update(AircraftType aircraftType) {
+        String sql = "UPDATE aircraft_types SET aircraft_model = ?, manufacturer = ?, total_seats = ?, business_class_seats = ?, economy_class_seats = ? WHERE aircraft_types_uuid = ? AND is_deleted = false";
+
+        int rowsAffected = jdbcTemplate.update(sql,
+                aircraftType.getAircraftModel(),
+                aircraftType.getManufacturer(),
+                aircraftType.getTotalSeats(),
+                aircraftType.getBusinessClassSeats(),
+                aircraftType.getEconomyClassSeats(),
+                aircraftType.getAircraftTypeUUID()
+        );
+
+        if (rowsAffected < 1) {
+            throw new AircraftTypeNotFoundException("Aircraft type not found or already deleted");
+        }
+        return aircraftType;
+    }
+
+    public int softDeleteByUUID(String aircraftTypeUUID) {
+        String sql = "UPDATE aircraft_types SET is_deleted = true WHERE aircraft_types_uuid = ? AND is_deleted = false";
+
+        return jdbcTemplate.update(sql, aircraftTypeUUID);
+    }
+
+    public boolean existsByUUIDAndNotDeleted(String aircraftTypeUUID) {
+        String sql = "SELECT COUNT(*) FROM aircraft_types WHERE aircraft_types_uuid = ? AND is_deleted = false";
+        Integer count = jdbcTemplate.queryForObject(sql, Integer.class, aircraftTypeUUID);
+        return count != null && count > 0;
     }
 
     private static class AircraftTypeRowMapper implements RowMapper<AircraftType> {

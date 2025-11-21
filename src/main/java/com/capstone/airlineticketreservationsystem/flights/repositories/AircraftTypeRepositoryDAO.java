@@ -9,4 +9,7 @@ public interface AircraftTypeRepositoryDAO {
     public AircraftType save(AircraftType aircraftType);
     public List<AircraftType> findAll();
     public Optional<AircraftType> findByAircraftTypeUUID(String aircraftTypeUUID);
+    public AircraftType update(AircraftType aircraftType);
+    public int softDeleteByUUID(String aircraftTypeUUID);
+    public boolean existsByUUIDAndNotDeleted(String aircraftTypeUUID);
 }
