@@ -15,6 +15,8 @@ import com.capstone.airlineticketreservationsystem.flights.dtos.CreateAircraftTy
 import com.capstone.airlineticketreservationsystem.flights.dtos.UpdateAircraftTypeRequest;
 import com.capstone.airlineticketreservationsystem.flights.services.AircraftTypeService;
 
+@RestController
+@RequestMapping("/api/aircraft-types")
 public class AircraftTypeController {
 
     public AircraftTypeController(AircraftTypeService aircraftTypeService) {

@@ -11,12 +11,14 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
+import org.springframework.stereotype.Repository;
 
 import com.capstone.airlineticketreservationsystem.flights.exceptions.AircraftTypeNotFoundException;
 import com.capstone.airlineticketreservationsystem.flights.models.AircraftType;
 
 import static com.capstone.airlineticketreservationsystem.utilities.UUIDV7Generator.generateUUIDV7;
 
+@Repository
 public class AircraftTypeRepositoryImplDAO implements AircraftTypeRepositoryDAO {
 
     public AircraftTypeRepositoryImplDAO(JdbcTemplate jdbcTemplate) {
@@ -34,14 +36,14 @@ public class AircraftTypeRepositoryImplDAO implements AircraftTypeRepositoryDAO 
         aircraftType.setAircraftTypeUUID(generateUUIDV7().toString());
 
         jdbcTemplate.update(connection -> {
-            PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-            ps.setString(1, aircraftType.getAircraftTypeUUID());
-            ps.setString(2, aircraftType.getAircraftModel());
-            ps.setString(3, aircraftType.getManufacturer());
-            ps.setInt(4, aircraftType.getTotalSeats());
-            ps.setInt(5, aircraftType.getBusinessClassSeats());
-            ps.setInt(6, aircraftType.getEconomyClassSeats());
-            return ps;
+            PreparedStatement preparedStatement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+            preparedStatement.setString(1, aircraftType.getAircraftTypeUUID());
+            preparedStatement.setString(2, aircraftType.getAircraftModel());
+            preparedStatement.setString(3, aircraftType.getManufacturer());
+            preparedStatement.setInt(4, aircraftType.getTotalSeats());
+            preparedStatement.setInt(5, aircraftType.getBusinessClassSeats());
+            preparedStatement.setInt(6, aircraftType.getEconomyClassSeats());
+            return preparedStatement;
         }, keyHolder);
 
         Number key = keyHolder.getKey();

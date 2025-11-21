@@ -3,6 +3,8 @@ package com.capstone.airlineticketreservationsystem.flights.services;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.stereotype.Service;
+
 import com.capstone.airlineticketreservationsystem.flights.dtos.AircraftTypeDTO;
 import com.capstone.airlineticketreservationsystem.flights.dtos.CreateAircraftTypeRequest;
 import com.capstone.airlineticketreservationsystem.flights.dtos.UpdateAircraftTypeRequest;
@@ -11,6 +13,7 @@ import com.capstone.airlineticketreservationsystem.flights.exceptions.AircraftTy
 import com.capstone.airlineticketreservationsystem.flights.models.AircraftType;
 import com.capstone.airlineticketreservationsystem.flights.repositories.AircraftTypeRepositoryDAO;
 
+@Service
 public class AircraftTypeService {
 
     public AircraftTypeService(AircraftTypeRepositoryDAO aircraftTypeRepository) {
@@ -32,13 +35,13 @@ public class AircraftTypeService {
         AircraftType savedAircraftType = aircraftTypeRepository.save(aircraftType);
 
         return new AircraftTypeDTO(
-                aircraftType.getAircraftTypeUUID(),
-                aircraftType.getAircraftModel(),
-                aircraftType.getManufacturer(),
-                aircraftType.getTotalSeats(),
-                aircraftType.getBusinessClassSeats(),
-                aircraftType.getEconomyClassSeats(),
-                aircraftType.getCreatedAt()
+                savedAircraftType.getAircraftTypeUUID(),
+                savedAircraftType.getAircraftModel(),
+                savedAircraftType.getManufacturer(),
+                savedAircraftType.getTotalSeats(),
+                savedAircraftType.getBusinessClassSeats(),
+                savedAircraftType.getEconomyClassSeats(),
+                savedAircraftType.getCreatedAt()
         );
     }
 
