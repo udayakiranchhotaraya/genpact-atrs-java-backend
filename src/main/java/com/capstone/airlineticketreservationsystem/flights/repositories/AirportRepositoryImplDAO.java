@@ -1,9 +1,15 @@
 package com.capstone.airlineticketreservationsystem.flights.repositories;
 
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.List;
+import java.util.Optional;
 
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
@@ -51,5 +57,75 @@ public class AirportRepositoryImplDAO implements AirportRepositoryDAO {
             }, key.longValue());
         }
         throw new RuntimeException("Failed to insert airport and retrieve generated ID.");
+    }
+
+    @Override
+    public List<Airport> findAll() {
+        String sql = "SELECT * FROM airports WHERE is_deleted = false ORDER BY airport_name";
+        return jdbcTemplate.query(sql, new AirportRowMapper());
+    }
+
+    public Optional<Airport> findByAirportUUID(String airportUUID) {
+        String sql = "SELECT * FROM airports WHERE airports_uuid = ? AND is_deleted = false";
+        try {
+            Airport airport = jdbcTemplate.queryForObject(sql, new AirportRowMapper(), airportUUID);
+            return Optional.ofNullable(airport);
+        } catch (EmptyResultDataAccessException e) {
+            return Optional.empty();
+        }
+    }
+
+    public Optional<Airport> findByAirportCode(String airportCode) {
+        String sql = "SELECT * FROM airports WHERE UPPER(airport_code) = UPPER(?) AND is_deleted = false";
+        try {
+            Airport airport = jdbcTemplate.queryForObject(sql, new AirportRowMapper(), airportCode);
+            return Optional.ofNullable(airport);
+        } catch (EmptyResultDataAccessException e) {
+            return Optional.empty();
+        }
+    }
+
+    public List<Airport> findByCity(String city) {
+        String sql = "SELECT * FROM airports WHERE LOWER(city) LIKE LOWER(?) AND is_deleted = false ORDER BY city, airport_name";
+        return jdbcTemplate.query(sql, new AirportRowMapper(), "%" + city + "%");
+    }
+
+    public List<Airport> findByAirportName(String name) {
+        String sql = "SELECT * FROM airports WHERE LOWER(airport_name) LIKE LOWER(?) AND is_deleted = false ORDER BY airport_name";
+        return jdbcTemplate.query(sql, new AirportRowMapper(), "%" + name + "%");
+    }
+    public List<Airport> searchAirports(String searchTerm) {
+        String sql = "SELECT * FROM airports WHERE (LOWER(airport_code) LIKE LOWER(?) OR " +
+                "LOWER(airport_name) LIKE LOWER(?) OR " +
+                "LOWER(city) LIKE LOWER(?) OR " +
+                "LOWER(country) LIKE LOWER(?)) AND is_deleted = false " +
+                "ORDER BY airport_name LIMIT 50";
+        String likeTerm = "%" + searchTerm + "%";
+        return jdbcTemplate.query(sql, new AirportRowMapper(), likeTerm, likeTerm, likeTerm, likeTerm);
+    }
+
+    public boolean existsByAirportCode(String airportCode) {
+        String sql = "SELECT COUNT(*) FROM airports WHERE UPPER(airport_code) = UPPER(?) AND is_deleted = false";
+        Integer count = jdbcTemplate.queryForObject(sql, Integer.class, airportCode);
+        return count != null && count > 0;
+    }
+
+
+    private static class AirportRowMapper implements RowMapper<Airport> {
+        @Override
+        public Airport mapRow(ResultSet rs, int rowNum) throws SQLException {
+            Airport airport = new Airport();
+            airport.setId(rs.getLong("id"));
+            airport.setAirportUUID(rs.getString("airports_uuid"));
+            airport.setAirportCode(rs.getString("airport_code"));
+            airport.setAirportName(rs.getString("airport_name"));
+            airport.setCity(rs.getString("city"));
+            airport.setCountry(rs.getString("country"));
+            airport.setTimezone(rs.getString("timezone"));
+            airport.setDeleted(rs.getBoolean("is_deleted"));
+            airport.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
+            airport.setUpdatedAt(rs.getTimestamp("updated_at").toLocalDateTime());
+            return airport;
+        }
     }
 }
