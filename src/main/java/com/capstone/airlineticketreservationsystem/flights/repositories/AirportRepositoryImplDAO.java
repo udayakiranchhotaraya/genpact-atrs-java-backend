@@ -66,6 +66,7 @@ public class AirportRepositoryImplDAO implements AirportRepositoryDAO {
         return jdbcTemplate.query(sql, new AirportRowMapper());
     }
 
+    @Override
     public Optional<Airport> findByAirportUUID(String airportUUID) {
         String sql = "SELECT * FROM airports WHERE airports_uuid = ? AND is_deleted = false";
         try {
@@ -76,6 +77,7 @@ public class AirportRepositoryImplDAO implements AirportRepositoryDAO {
         }
     }
 
+    @Override
     public Optional<Airport> findByAirportCode(String airportCode) {
         String sql = "SELECT * FROM airports WHERE UPPER(airport_code) = UPPER(?) AND is_deleted = false";
         try {
@@ -86,15 +88,19 @@ public class AirportRepositoryImplDAO implements AirportRepositoryDAO {
         }
     }
 
+    @Override
     public List<Airport> findByCity(String city) {
         String sql = "SELECT * FROM airports WHERE LOWER(city) LIKE LOWER(?) AND is_deleted = false ORDER BY city, airport_name";
         return jdbcTemplate.query(sql, new AirportRowMapper(), "%" + city + "%");
     }
 
+    @Override
     public List<Airport> findByAirportName(String name) {
         String sql = "SELECT * FROM airports WHERE LOWER(airport_name) LIKE LOWER(?) AND is_deleted = false ORDER BY airport_name";
         return jdbcTemplate.query(sql, new AirportRowMapper(), "%" + name + "%");
     }
+
+    @Override
     public List<Airport> searchAirports(String searchTerm) {
         String sql = "SELECT * FROM airports WHERE (LOWER(airport_code) LIKE LOWER(?) OR " +
                 "LOWER(airport_name) LIKE LOWER(?) OR " +
@@ -105,6 +111,7 @@ public class AirportRepositoryImplDAO implements AirportRepositoryDAO {
         return jdbcTemplate.query(sql, new AirportRowMapper(), likeTerm, likeTerm, likeTerm, likeTerm);
     }
 
+    @Override
     public Airport update(Airport airport) {
         String sql = "UPDATE airports SET airport_name = ?, city = ?, country = ?, timezone = ? WHERE airports_uuid = ? AND is_deleted = false";
 
@@ -122,6 +129,7 @@ public class AirportRepositoryImplDAO implements AirportRepositoryDAO {
         return airport;
     }
 
+    @Override
     public int softDeleteByUUID(String airportUUID) {
         String sql = "UPDATE airports SET is_deleted = true, updated_at = CURRENT_TIMESTAMP " +
                 "WHERE airports_uuid = ? AND is_deleted = false";
@@ -129,16 +137,40 @@ public class AirportRepositoryImplDAO implements AirportRepositoryDAO {
         return jdbcTemplate.update(sql, airportUUID);
     }
 
+    @Override
     public boolean existsByAirportCode(String airportCode) {
         String sql = "SELECT COUNT(*) FROM airports WHERE UPPER(airport_code) = UPPER(?) AND is_deleted = false";
         Integer count = jdbcTemplate.queryForObject(sql, Integer.class, airportCode);
         return count != null && count > 0;
     }
 
+    @Override
     public boolean existsByUUIDAndNotDeleted(String airportUUID) {
         String sql = "SELECT COUNT(*) FROM airports WHERE airports_uuid = ? AND is_deleted = false";
         Integer count = jdbcTemplate.queryForObject(sql, Integer.class, airportUUID);
         return count != null && count > 0;
+    }
+
+    @Override
+    public Optional<Long> findIdByUUID(String airportUUID) {
+        String sql = "SELECT id FROM airports WHERE airports_uuid = ? AND is_deleted = false";
+        try {
+            Long id = jdbcTemplate.queryForObject(sql, Long.class, airportUUID);
+            return Optional.ofNullable(id);
+        } catch (Exception e) {
+            return Optional.empty();
+        }
+    }
+
+    @Override
+    public Optional<Airport> findById(Long id) {
+        String sql = "SELECT * FROM airports WHERE id = ? AND is_deleted = false";
+        try {
+            Airport airport = jdbcTemplate.queryForObject(sql, new AirportRowMapper(), id);
+            return Optional.ofNullable(airport);
+        } catch (Exception e) {
+            return Optional.empty();
+        }
     }
 
     private static class AirportRowMapper implements RowMapper<Airport> {

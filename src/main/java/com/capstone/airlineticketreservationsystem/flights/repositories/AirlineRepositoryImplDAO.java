@@ -90,6 +90,7 @@ public class AirlineRepositoryImplDAO implements AirlineRepositoryDAO {
         }
     }
 
+    @Override
     public Airline update(Airline airline) {
         String sql = "UPDATE airlines SET airline_name = ?, country = ?, logo_url = ?, updated_at = CURRENT_TIMESTAMP WHERE airlines_uuid = ? AND is_deleted = false";
 
@@ -102,16 +103,40 @@ public class AirlineRepositoryImplDAO implements AirlineRepositoryDAO {
         return airline;
     }
 
+    @Override
     public int softDeleteByUUID(String airlineUUID) {
         String sql = "UPDATE airlines SET is_deleted = true, updated_at = CURRENT_TIMESTAMP WHERE airlines_uuid = ? AND is_deleted = false";
 
         return jdbcTemplate.update(sql, airlineUUID);
     }
 
+    @Override
     public boolean existsByAirlineCode(String airlineCode) {
         String sql = "SELECT COUNT(*) FROM airlines WHERE airline_code = ? AND is_deleted = false";
         Integer count = jdbcTemplate.queryForObject(sql, Integer.class, airlineCode);
         return (count != null && count > 0);
+    }
+
+    @Override
+    public Optional<Long> findIdByUUID(String airlineUUID) {
+        String sql = "SELECT id FROM airlines WHERE airlines_uuid = ? AND is_deleted = false";
+        try {
+            Long id = jdbcTemplate.queryForObject(sql, Long.class, airlineUUID);
+            return Optional.ofNullable(id);
+        } catch (Exception e) {
+            return Optional.empty();
+        }
+    }
+
+    @Override
+    public Optional<Airline> findById(Long id) {
+        String sql = "SELECT * FROM airlines WHERE id = ? AND is_deleted = false";
+        try {
+            Airline airline = jdbcTemplate.queryForObject(sql, new AirlineRowMapper(), id);
+            return Optional.ofNullable(airline);
+        } catch (Exception e) {
+            return Optional.empty();
+        }
     }
 
     private static class AirlineRowMapper implements RowMapper<Airline> {

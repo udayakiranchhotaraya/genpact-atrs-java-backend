@@ -12,4 +12,6 @@ public interface AircraftTypeRepositoryDAO {
     public AircraftType update(AircraftType aircraftType);
     public int softDeleteByUUID(String aircraftTypeUUID);
     public boolean existsByUUIDAndNotDeleted(String aircraftTypeUUID);
+    Optional<Long> findIdByUUID(String aircraftTypeUUID);
+    Optional<AircraftType> findById(Long id);
 }

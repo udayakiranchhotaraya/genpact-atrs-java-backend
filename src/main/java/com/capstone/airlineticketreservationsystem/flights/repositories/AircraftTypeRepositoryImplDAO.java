@@ -59,11 +59,13 @@ public class AircraftTypeRepositoryImplDAO implements AircraftTypeRepositoryDAO 
         throw new RuntimeException("Failed to insert aircraft type and retrieve generated ID.");
     }
 
+    @Override
     public List<AircraftType> findAll() {
         String sql = "SELECT * FROM aircraft_types WHERE is_deleted = false ORDER BY manufacturer, aircraft_model";
         return jdbcTemplate.query(sql, new AircraftTypeRowMapper());
     }
 
+    @Override
     public Optional<AircraftType> findByAircraftTypeUUID(String aircraftTypeUUID) {
         String sql = "SELECT * FROM aircraft_types WHERE aircraft_types_uuid = ? AND is_deleted = false";
         try {
@@ -74,6 +76,7 @@ public class AircraftTypeRepositoryImplDAO implements AircraftTypeRepositoryDAO 
         }
     }
 
+    @Override
     public AircraftType update(AircraftType aircraftType) {
         String sql = "UPDATE aircraft_types SET aircraft_model = ?, manufacturer = ?, total_seats = ?, business_class_seats = ?, economy_class_seats = ? WHERE aircraft_types_uuid = ? AND is_deleted = false";
 
@@ -92,16 +95,40 @@ public class AircraftTypeRepositoryImplDAO implements AircraftTypeRepositoryDAO 
         return aircraftType;
     }
 
+    @Override
     public int softDeleteByUUID(String aircraftTypeUUID) {
         String sql = "UPDATE aircraft_types SET is_deleted = true WHERE aircraft_types_uuid = ? AND is_deleted = false";
 
         return jdbcTemplate.update(sql, aircraftTypeUUID);
     }
 
+    @Override
     public boolean existsByUUIDAndNotDeleted(String aircraftTypeUUID) {
         String sql = "SELECT COUNT(*) FROM aircraft_types WHERE aircraft_types_uuid = ? AND is_deleted = false";
         Integer count = jdbcTemplate.queryForObject(sql, Integer.class, aircraftTypeUUID);
         return count != null && count > 0;
+    }
+
+    @Override
+    public Optional<Long> findIdByUUID(String aircraftTypeUUID) {
+        String sql = "SELECT id FROM aircraft_types WHERE aircraft_types_uuid = ? AND is_deleted = false";
+        try {
+            Long id = jdbcTemplate.queryForObject(sql, Long.class, aircraftTypeUUID);
+            return Optional.ofNullable(id);
+        } catch (Exception e) {
+            return Optional.empty();
+        }
+    }
+
+    @Override
+    public Optional<AircraftType> findById(Long id) {
+        String sql = "SELECT * FROM aircraft_types WHERE id = ? AND is_deleted = false";
+        try {
+            AircraftType aircraftType = jdbcTemplate.queryForObject(sql, new AircraftTypeRowMapper(), id);
+            return Optional.ofNullable(aircraftType);
+        } catch (Exception e) {
+            return Optional.empty();
+        }
     }
 
     private static class AircraftTypeRowMapper implements RowMapper<AircraftType> {
