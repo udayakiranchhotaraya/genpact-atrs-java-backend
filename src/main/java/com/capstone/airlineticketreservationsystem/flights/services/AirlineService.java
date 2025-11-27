@@ -64,8 +64,7 @@ public class AirlineService {
     // Get airline by code
     public AirlineDTO getAirlineByCode(String airlineCode) {
         Airline airline = airlineRepositoryDAO.findByAirlineCode(airlineCode)
-                .orElseThrow(() -> new AirlineNotFoundException(
-                        "Airline not found with code: " + airlineCode));
+                .orElseThrow(() -> new AirlineNotFoundException("Airline not found with code: " + airlineCode));
         return convertToDTO(airline);
     }
 
