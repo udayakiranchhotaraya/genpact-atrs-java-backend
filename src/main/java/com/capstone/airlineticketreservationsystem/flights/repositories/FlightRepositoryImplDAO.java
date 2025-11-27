@@ -1,13 +1,13 @@
 package com.capstone.airlineticketreservationsystem.flights.repositories;
 
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import com.capstone.airlineticketreservationsystem.flights.dtos.FlightDTO;
 import com.capstone.airlineticketreservationsystem.flights.dtos.FlightSearchCriteria;
+import com.capstone.airlineticketreservationsystem.flights.exceptions.FlightNotFoundException;
 import com.capstone.airlineticketreservationsystem.flights.models.FlightStatus;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -163,13 +163,6 @@ public class FlightRepositoryImplDAO implements FlightRepositoryDAO {
             params.add(criteria.getAirlineUUID());
         }
 
-        // Seat availability filter - assuming you have available_seats fields
-        if ("business".equalsIgnoreCase(criteria.getSeatType())) {
-            whereClause.append("AND f.available_business_seats > 0 ");
-        } else {
-            whereClause.append("AND f.available_economy_seats > 0 ");
-        }
-
         String dataSql = """
             SELECT
                 f.flight_uuid, f.flight_number,
@@ -226,6 +219,37 @@ public class FlightRepositoryImplDAO implements FlightRepositoryDAO {
         );
 
         return new PageImpl<>(content, pageable, total);
+    }
+
+    @Override
+    public Map<String, Integer> getSeatsAvailability(String flightUUID) {
+        String sql = """
+            SELECT
+                at.economy_class_seats,
+                at.business_class_seats,
+                at.economy_class_seats - IFNULL(SUM(t.seat_class = 'ECONOMY'), 0) AS available_economy_seats,
+                at.business_class_seats - IFNULL(SUM(t.seat_class = 'BUSINESS'), 0) AS available_business_seats
+            FROM flights f
+            INNER JOIN aircraft_types at ON f.aircraft_type_id = at.id
+            LEFT JOIN tickets t ON f.id = t.flight_id 
+                AND t.ticket_status IN ('ISSUED', 'CHECKED_IN', 'BOARDED') 
+                AND t.is_deleted = FALSE
+            WHERE f.flights_uuid = ? AND f.is_deleted = FALSE
+            GROUP BY f.id, at.economy_class_seats, at.business_class_seats
+            """;
+
+        try {
+            return jdbcTemplate.queryForObject(sql, (rs, rowNum) -> {
+                Map<String, Integer> availability = new HashMap<>();
+                availability.put("available_economy_seats", rs.getInt("available_economy_seats"));
+                availability.put("available_business_seats", rs.getInt("available_business_seats"));
+                availability.put("total_economy_seats", rs.getInt("economy_class_seats"));
+                availability.put("total_business_seats", rs.getInt("business_class_seats"));
+                return availability;
+            }, flightUUID);
+        } catch (EmptyResultDataAccessException e) {
+            throw new FlightNotFoundException("Flight not found with UUID: " + flightUUID);
+        }
     }
 
     private static class FlightRowMapper implements RowMapper<Flight> {

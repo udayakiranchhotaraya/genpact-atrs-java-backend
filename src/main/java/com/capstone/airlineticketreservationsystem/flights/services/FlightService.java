@@ -23,6 +23,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -76,10 +77,19 @@ public class FlightService {
         Page<FlightDTO> flightPage = flightRepository.searchFlights(criteria, pageable);
 
         // Apply seat type pricing and custom sorting
-        List<FlightDTO> flights = flightPage.getContent();
+        List<FlightDTO> availableFlights = flightPage.getContent().stream()
+                .filter(flight -> {
+                    Map<String, Integer> availability = flightRepository.getSeatsAvailability(flight.getFlightUUID());
+                    if ("business".equalsIgnoreCase(criteria.getSeatType())) {
+                        return availability.get("available_business_seats") > 0;
+                    } else {
+                        return availability.get("available_economy_seats") > 0;
+                    }
+                })
+                .collect(Collectors.toList());
 
         // Apply pricing based on seat type
-        List<FlightDTO> pricedFlights = applySeatTypePricing(flights, criteria.getSeatType());
+        List<FlightDTO> pricedFlights = applySeatTypePricing(availableFlights, criteria.getSeatType());
 
         // Apply custom sorting: fastest at index 0, cheapest at index 1, then by parameters
         List<FlightDTO> sortedFlights = applyCustomSorting(pricedFlights, criteria);

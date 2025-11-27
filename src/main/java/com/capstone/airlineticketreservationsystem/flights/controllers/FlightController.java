@@ -38,7 +38,7 @@ public class FlightController {
         return new ResponseEntity<>(flight, HttpStatus.OK);
     }
 
-    @GetMapping("/search")
+    @GetMapping(value = "/search")
     public ResponseEntity<Page<FlightDTO>> searchFlights(
             @RequestParam(required = false) String departureAirportUUID,
             @RequestParam(required = false) String arrivalAirportUUID,

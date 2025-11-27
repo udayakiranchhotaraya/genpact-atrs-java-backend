@@ -1,5 +1,6 @@
 package com.capstone.airlineticketreservationsystem.flights.repositories;
 
+import java.util.Map;
 import java.util.Optional;
 
 import com.capstone.airlineticketreservationsystem.flights.dtos.FlightDTO;
@@ -14,4 +15,5 @@ public interface FlightRepositoryDAO {
     Optional<Flight> findByFlightUUID(String flightUUID);
     Page<FlightDTO> findAll(Pageable pageable);
     public Page<FlightDTO> searchFlights(FlightSearchCriteria criteria, Pageable pageable);
+    public Map<String, Integer> getSeatsAvailability(String flightUUID);
 }
