@@ -77,16 +77,6 @@ public class FlightRepositoryImplDAO implements FlightRepositoryDAO {
         }
     }
 
-    public Optional<Flight> findById(Long id) {
-        String sql = "SELECT * FROM flights WHERE id = ? AND is_deleted = false";
-        try {
-            Flight flight = jdbcTemplate.queryForObject(sql, new FlightRowMapper(), id);
-            return Optional.ofNullable(flight);
-        } catch (Exception e) {
-            return Optional.empty();
-        }
-    }
-
     @Override
     public Page<FlightDTO> findAll(Pageable pageable) {
         // Main data query with JOINs
@@ -158,6 +148,7 @@ public class FlightRepositoryImplDAO implements FlightRepositoryDAO {
             params.add(criteria.getArrivalAirportUUID());
         }
 
+        // Airline filter
         if (criteria.getAirlineUUID() != null) {
             whereClause.append("AND a.airlines_uuid = ? ");
             params.add(criteria.getAirlineUUID());
@@ -285,6 +276,31 @@ public class FlightRepositoryImplDAO implements FlightRepositoryDAO {
             throw new FlightNotFoundException("Flight not found or it has been deleted");
         }
         return flight;
+    }
+
+    @Override
+    public int softDeleteByUUID(String flightUUID) {
+        String sql = "UPDATE flights SET is_deleted = TRUE, updated_at = CURRENT_TIMESTAMP WHERE flights_uuid = ? AND is_deleted = FALSE";
+
+        return jdbcTemplate.update(sql, flightUUID);
+    }
+
+    @Override
+    public boolean existsByUUIDAndNotDeleted(String flightUUID) {
+        String sql = "SELECT COUNT(*) FROM flights WHERE flights_uuid = ? AND is_deleted = FALSE";
+        Integer count = jdbcTemplate.queryForObject(sql, Integer.class, flightUUID);
+        return count != null && count > 0;
+    }
+
+    @Override
+    public Optional<Flight> findById(Long id) {
+        String sql = "SELECT * FROM flights WHERE id = ? AND is_deleted = false";
+        try {
+            Flight flight = jdbcTemplate.queryForObject(sql, new FlightRowMapper(), id);
+            return Optional.ofNullable(flight);
+        } catch (Exception e) {
+            return Optional.empty();
+        }
     }
 
     private static class FlightRowMapper implements RowMapper<Flight> {

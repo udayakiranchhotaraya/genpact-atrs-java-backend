@@ -14,6 +14,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.Instant;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/flights")
 public class FlightController {
@@ -65,6 +69,18 @@ public class FlightController {
 
         FlightDTO updatedFlight = flightService.updateFlight(flightUUID, updateFlightRequest);
         return new ResponseEntity<>(updatedFlight, HttpStatus.OK);
+    }
+
+    @DeleteMapping("/{flightUUID}")
+    public ResponseEntity<Map<String, String>> deleteFlight(@PathVariable String flightUUID) {
+        flightService.deleteFlightByUUID(flightUUID);
+
+        Map<String, String> response = new LinkedHashMap<>();
+        response.put("message", "Flight deleted successfully");
+        response.put("flightUUID", flightUUID);
+        response.put("timestamp", Instant.now().toString());
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @GetMapping("/health")

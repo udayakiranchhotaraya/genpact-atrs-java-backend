@@ -112,6 +112,18 @@ public class FlightService {
         return buildCompleteFlightDTO(updatedFlight);
     }
 
+    public void deleteFlightByUUID(String flightUUID) {
+        if (!flightRepository.existsByUUIDAndNotDeleted(flightUUID)) {
+            throw new FlightNotFoundException("Flight not found with UUID: " + flightUUID);
+        }
+
+        int rowsAffected = flightRepository.softDeleteByUUID(flightUUID);
+
+        if (rowsAffected == 0) {
+            throw new FlightAlreadyDeletedException("Flight with UUID: " + flightUUID + " is already deleted");
+        }
+    }
+
     private void validateFlightBusinessRules(EntityLookupService.FlightRequiredIds ids, CreateFlightRequest request) {
         // Validate departure and arrival airports are different
         if (ids.departureAirportId().equals(ids.arrivalAirportId())) {

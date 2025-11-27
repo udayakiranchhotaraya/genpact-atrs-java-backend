@@ -17,4 +17,7 @@ public interface FlightRepositoryDAO {
     public Page<FlightDTO> searchFlights(FlightSearchCriteria criteria, Pageable pageable);
     public Map<String, Integer> getSeatsAvailability(String flightUUID);
     Flight update(Flight flight);
+    int softDeleteByUUID(String flightUUID);
+    boolean existsByUUIDAndNotDeleted(String flightUUID);
+    Optional<Flight> findById(Long id);
 }
