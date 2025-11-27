@@ -2,6 +2,7 @@ package com.capstone.airlineticketreservationsystem.flights.services;
 
 import com.capstone.airlineticketreservationsystem.flights.dtos.CreateFlightRequest;
 import com.capstone.airlineticketreservationsystem.flights.dtos.FlightDTO;
+import com.capstone.airlineticketreservationsystem.flights.dtos.FlightSearchCriteria;
 import com.capstone.airlineticketreservationsystem.flights.exceptions.*;
 import com.capstone.airlineticketreservationsystem.flights.models.AircraftType;
 import com.capstone.airlineticketreservationsystem.flights.models.Airline;
@@ -13,16 +14,25 @@ import com.capstone.airlineticketreservationsystem.flights.repositories.AirportR
 import com.capstone.airlineticketreservationsystem.flights.repositories.FlightRepositoryDAO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class FlightService {
 
-    @Autowired
-    private FlightRepositoryDAO flightRepository;
+    private final FlightRepositoryDAO flightRepository;
+
+    public FlightService(FlightRepositoryDAO flightRepository) {
+        this.flightRepository = flightRepository;
+    }
 
     @Autowired
     private EntityLookupService entityLookupService;
@@ -59,6 +69,22 @@ public class FlightService {
         Flight flight = flightRepository.findByFlightUUID(flightUUID)
                 .orElseThrow(() -> new FlightNotFoundException("Flight not found with UUID: " + flightUUID));
         return buildCompleteFlightDTO(flight);
+    }
+
+    public Page<FlightDTO> searchFlights(FlightSearchCriteria criteria, Pageable pageable) {
+        // Get paginated results from repository
+        Page<FlightDTO> flightPage = flightRepository.searchFlights(criteria, pageable);
+
+        // Apply seat type pricing and custom sorting
+        List<FlightDTO> flights = flightPage.getContent();
+
+        // Apply pricing based on seat type
+        List<FlightDTO> pricedFlights = applySeatTypePricing(flights, criteria.getSeatType());
+
+        // Apply custom sorting: fastest at index 0, cheapest at index 1, then by parameters
+        List<FlightDTO> sortedFlights = applyCustomSorting(pricedFlights, criteria);
+
+        return new PageImpl<>(sortedFlights, pageable, flightPage.getTotalElements());
     }
 
     private void validateFlightBusinessRules(EntityLookupService.FlightRequiredIds ids, CreateFlightRequest request) {
@@ -175,5 +201,112 @@ public class FlightService {
         airportInfo.setCountry(airport.getCountry());
         airportInfo.setTimezone(airport.getTimezone());
         return airportInfo;
+    }
+
+    private List<FlightDTO> applySeatTypePricing(List<FlightDTO> flights, String seatType) {
+        return flights.stream()
+                .map(flight -> {
+                    FlightDTO pricedFlight = cloneFlightDTO(flight); // Implement this based on your needs
+                    BigDecimal price = "business".equalsIgnoreCase(seatType)
+                            ? flight.getBaseBusinessPrice()
+                            : flight.getBaseEconomyPrice();
+                    pricedFlight.setCurrentPrice(price); // Add this field to FlightDTO
+                    return pricedFlight;
+                })
+                .collect(Collectors.toList());
+    }
+
+    private List<FlightDTO> applyCustomSorting(List<FlightDTO> flights, FlightSearchCriteria criteria) {
+        if (flights.isEmpty()) return flights;
+
+        List<FlightDTO> sortedList = new ArrayList<>(flights);
+
+        // Find fastest flight (shortest duration)
+        FlightDTO fastest = sortedList.stream()
+                .min(Comparator.comparingLong(this::calculateFlightDuration))
+                .orElse(sortedList.get(0));
+
+        // Find cheapest flight
+        FlightDTO cheapest = sortedList.stream()
+                .min(Comparator.comparing(FlightDTO::getCurrentPrice))
+                .orElse(sortedList.get(0));
+
+        // Remove fastest and cheapest from the list for remaining sorting
+        sortedList.remove(fastest);
+        sortedList.remove(cheapest);
+
+        // Sort remaining flights based on request parameters
+        sortRemainingFlights(sortedList, criteria);
+
+        // Build final list: fastest at 0, cheapest at 1, then the rest
+        List<FlightDTO> finalList = new ArrayList<>();
+        finalList.add(fastest);
+        finalList.add(cheapest);
+        finalList.addAll(sortedList);
+
+        return finalList;
+    }
+
+    private void sortRemainingFlights(List<FlightDTO> flights, FlightSearchCriteria criteria) {
+        String sortBy = criteria.getSortBy();
+        String direction = criteria.getDirection();
+
+        Comparator<FlightDTO> comparator = switch (sortBy) {
+            case "duration" -> Comparator.comparingLong(this::calculateFlightDuration);
+            case "price" -> Comparator.comparing(FlightDTO::getCurrentPrice);
+            default -> Comparator.comparing(FlightDTO::getScheduledDeparture);
+        };
+
+        if ("desc".equalsIgnoreCase(direction)) {
+            comparator = comparator.reversed();
+        }
+
+        flights.sort(comparator);
+    }
+
+    private long calculateFlightDuration(FlightDTO flight) {
+        return Duration.between(flight.getScheduledDeparture(), flight.getScheduledArrival()).toMinutes();
+    }
+
+    private FlightDTO cloneFlightDTO(FlightDTO original) {
+        // Simple implementation - create new FlightDTO and copy all fields
+        FlightDTO clone = new FlightDTO();
+
+        // Copy all basic fields
+        clone.setFlightUUID(original.getFlightUUID());
+        clone.setFlightNumber(original.getFlightNumber());
+        clone.setScheduledDeparture(original.getScheduledDeparture());
+        clone.setScheduledArrival(original.getScheduledArrival());
+        clone.setActualDeparture(original.getActualDeparture());
+        clone.setActualArrival(original.getActualArrival());
+        clone.setStatus(original.getStatus());
+        clone.setBaseEconomyPrice(original.getBaseEconomyPrice());
+        clone.setBaseBusinessPrice(original.getBaseBusinessPrice());
+        clone.setCreatedAt(original.getCreatedAt());
+        clone.setUpdatedAt(original.getUpdatedAt());
+
+        // Copy airline information
+        clone.setAirlineUUID(original.getAirlineUUID());
+        clone.setAirlineCode(original.getAirlineCode());
+        clone.setAirlineName(original.getAirlineName());
+        clone.setAirlineCountry(original.getAirlineCountry());
+        clone.setAirlineLogoUrl(original.getAirlineLogoUrl());
+
+        // Copy aircraft information
+        clone.setAircraftTypeUUID(original.getAircraftTypeUUID());
+        clone.setAircraftModel(original.getAircraftModel());
+        clone.setManufacturer(original.getManufacturer());
+        clone.setTotalSeats(original.getTotalSeats());
+        clone.setBusinessClassSeats(original.getBusinessClassSeats());
+        clone.setEconomyClassSeats(original.getEconomyClassSeats());
+
+        // Copy airport information - these are immutable so we can reuse the objects
+        clone.setDepartureAirport(original.getDepartureAirport());
+        clone.setArrivalAirport(original.getArrivalAirport());
+
+        // currentPrice will be set separately in applySeatTypePricing
+        clone.setCurrentPrice(original.getCurrentPrice());
+
+        return clone;
     }
 }

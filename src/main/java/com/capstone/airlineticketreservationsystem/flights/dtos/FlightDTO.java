@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 import com.fasterxml.jackson.annotation.JsonFormat;
 
 import com.capstone.airlineticketreservationsystem.flights.models.FlightStatus;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 public class FlightDTO {
 
@@ -47,6 +48,9 @@ public class FlightDTO {
     private FlightStatus status;
     private BigDecimal baseEconomyPrice;
     private BigDecimal baseBusinessPrice;
+
+    @JsonInclude(JsonInclude.Include.NON_NULL) // The currentPrice field will be omitted from the JSON output when it is null
+    private BigDecimal currentPrice;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdAt;
@@ -228,6 +232,14 @@ public class FlightDTO {
 
     public void setBaseBusinessPrice(BigDecimal baseBusinessPrice) {
         this.baseBusinessPrice = baseBusinessPrice;
+    }
+
+    public BigDecimal getCurrentPrice() {
+        return currentPrice;
+    }
+
+    public void setCurrentPrice(BigDecimal currentPrice) {
+        this.currentPrice = currentPrice;
     }
 
     public LocalDateTime getCreatedAt() {

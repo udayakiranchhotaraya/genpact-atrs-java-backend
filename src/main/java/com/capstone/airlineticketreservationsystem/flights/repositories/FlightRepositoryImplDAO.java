@@ -1,10 +1,12 @@
 package com.capstone.airlineticketreservationsystem.flights.repositories;
 
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 import com.capstone.airlineticketreservationsystem.flights.dtos.FlightDTO;
+import com.capstone.airlineticketreservationsystem.flights.dtos.FlightSearchCriteria;
 import com.capstone.airlineticketreservationsystem.flights.models.FlightStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -135,6 +137,93 @@ public class FlightRepositoryImplDAO implements FlightRepositoryDAO {
         // Count query for pagination metadata
         String countSql = "SELECT COUNT(*) FROM flights WHERE is_deleted = FALSE";
         Long total = jdbcTemplate.queryForObject(countSql, Long.class);
+
+        return new PageImpl<>(content, pageable, total);
+    }
+
+    @Override
+    public Page<FlightDTO> searchFlights(FlightSearchCriteria criteria, Pageable pageable) {
+        // Build WHERE clause and parameters
+        StringBuilder whereClause = new StringBuilder("WHERE f.is_deleted = FALSE ");
+        List<Object> params = new ArrayList<>();
+
+        // Airport filters
+        if (criteria.getDepartureAirportUUID() != null) {
+            whereClause.append("AND dep.airports_uuid = ? ");
+            params.add(criteria.getDepartureAirportUUID());
+        }
+
+        if (criteria.getArrivalAirportUUID() != null) {
+            whereClause.append("AND arr.airports_uuid = ? ");
+            params.add(criteria.getArrivalAirportUUID());
+        }
+
+        if (criteria.getAirlineUUID() != null) {
+            whereClause.append("AND a.airlines_uuid = ? ");
+            params.add(criteria.getAirlineUUID());
+        }
+
+        // Seat availability filter - assuming you have available_seats fields
+        if ("business".equalsIgnoreCase(criteria.getSeatType())) {
+            whereClause.append("AND f.available_business_seats > 0 ");
+        } else {
+            whereClause.append("AND f.available_economy_seats > 0 ");
+        }
+
+        String dataSql = """
+            SELECT
+                f.flight_uuid, f.flight_number,
+                f.scheduled_departure, f.scheduled_arrival,
+                f.actual_departure, f.actual_arrival,
+                f.status, f.base_economy_price, f.base_business_price,
+                f.created_at, f.updated_at,
+                a.airlines_uuid AS airline_uuid, a.airline_code,
+                a.airline_name, a.country AS airline_country, a.logo_url AS airline_logo_url,
+                ac.aircraft_types_uuid AS aircraft_type_uuid, ac.aircraft_model,
+                ac.manufacturer, ac.total_seats, ac.business_class_seats, ac.economy_class_seats,
+                dep.airports_uuid AS dep_airport_uuid, dep.airport_code AS dep_airport_code,
+                dep.airport_name AS dep_airport_name, dep.city AS dep_city,
+                dep.country AS dep_country, dep.timezone AS dep_timezone,
+                arr.airports_uuid AS arr_airport_uuid, arr.airport_code AS arr_airport_code,
+                arr.airport_name AS arr_airport_name, arr.city AS arr_city,
+                arr.country AS arr_country, arr.timezone AS arr_timezone,
+                CASE WHEN ? = 'business' THEN f.base_business_price ELSE f.base_economy_price END AS current_price
+            FROM flights f
+            INNER JOIN airlines a ON f.airline_id = a.id AND a.is_deleted = FALSE
+            INNER JOIN aircraft_types ac ON f.aircraft_type_id = ac.id AND ac.is_deleted = FALSE
+            INNER JOIN airports dep ON f.departure_airport_id = dep.id AND dep.is_deleted = FALSE
+            INNER JOIN airports arr ON f.arrival_airport_id = arr.id AND arr.is_deleted = FALSE
+            %s
+            ORDER BY f.scheduled_departure ASC
+            LIMIT ? OFFSET ?
+        """.formatted(whereClause.toString());
+
+        // Add seat type parameter for the CASE statement
+        params.add(0, criteria.getSeatType() != null ? criteria.getSeatType() : "economy");
+
+        // Add pagination parameters
+        params.add(pageable.getPageSize());
+        params.add(pageable.getOffset());
+
+        // Execute query
+        List<FlightDTO> content = jdbcTemplate.query(
+                dataSql,
+                new FlightDtoRowMapper(),
+                params.toArray()
+        );
+
+        // Count query (excluding price selection and pagination)
+        String countSql = "SELECT COUNT(*) FROM flights f " +
+                "INNER JOIN airlines a ON f.airline_id = a.id AND a.is_deleted = FALSE " +
+                "INNER JOIN airports dep ON f.departure_airport_id = dep.id AND dep.is_deleted = FALSE " +
+                "INNER JOIN airports arr ON f.arrival_airport_id = arr.id AND arr.is_deleted = FALSE " +
+                whereClause.toString();
+
+        Long total = jdbcTemplate.queryForObject(
+                countSql,
+                Long.class,
+                params.subList(1, params.size() - 2).toArray() // Exclude seatType, LIMIT, OFFSET
+        );
 
         return new PageImpl<>(content, pageable, total);
     }
