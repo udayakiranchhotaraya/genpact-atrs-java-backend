@@ -12,7 +12,11 @@ import com.capstone.airlineticketreservationsystem.flights.repositories.AirlineR
 import com.capstone.airlineticketreservationsystem.flights.repositories.AirportRepositoryDAO;
 import com.capstone.airlineticketreservationsystem.flights.repositories.FlightRepositoryDAO;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 public class FlightService {
@@ -45,6 +49,16 @@ public class FlightService {
 
         // Step 4: Build complete DTO with all related entity details
         return buildCompleteFlightDTO(savedFlight);
+    }
+
+    public Page<FlightDTO> getAllFlights(Pageable pageable) {
+        return flightRepository.findAll(pageable);
+    }
+
+    public FlightDTO getFlightByUUID(String flightUUID) {
+        Flight flight = flightRepository.findByFlightUUID(flightUUID)
+                .orElseThrow(() -> new FlightNotFoundException("Flight not found with UUID: " + flightUUID));
+        return buildCompleteFlightDTO(flight);
     }
 
     private void validateFlightBusinessRules(EntityLookupService.FlightRequiredIds ids, CreateFlightRequest request) {

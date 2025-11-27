@@ -1,10 +1,14 @@
 package com.capstone.airlineticketreservationsystem.flights.repositories;
 
-import java.sql.PreparedStatement;
-import java.sql.Statement;
+import java.sql.*;
+import java.util.List;
 import java.util.Optional;
 
+import com.capstone.airlineticketreservationsystem.flights.dtos.FlightDTO;
 import com.capstone.airlineticketreservationsystem.flights.models.FlightStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
@@ -81,9 +85,63 @@ public class FlightRepositoryImplDAO implements FlightRepositoryDAO {
         }
     }
 
+    @Override
+    public Page<FlightDTO> findAll(Pageable pageable) {
+        // Main data query with JOINs
+        String dataSql = """
+            SELECT 
+                f.flight_uuid, f.flight_number,
+                f.scheduled_departure, f.scheduled_arrival,
+                f.actual_departure, f.actual_arrival,
+                f.status, f.base_economy_price, f.base_business_price,
+                f.created_at, f.updated_at,
+                
+                -- Airline details
+                a.airlines_uuid AS airline_uuid, a.airline_code, 
+                a.airline_name, a.country AS airline_country, a.logo_url AS airline_logo_url,
+                
+                -- Aircraft type details  
+                ac.aircraft_types_uuid AS aircraft_type_uuid, ac.aircraft_model,
+                ac.manufacturer, ac.total_seats, ac.business_class_seats, ac.economy_class_seats,
+                
+                -- Departure airport details
+                dep.airports_uuid AS dep_airport_uuid, dep.airport_code AS dep_airport_code,
+                dep.airport_name AS dep_airport_name, dep.city AS dep_city, 
+                dep.country AS dep_country, dep.timezone AS dep_timezone,
+                
+                -- Arrival airport details
+                arr.airports_uuid AS arr_airport_uuid, arr.airport_code AS arr_airport_code,
+                arr.airport_name AS arr_airport_name, arr.city AS arr_city,
+                arr.country AS arr_country, arr.timezone AS arr_timezone
+                
+            FROM flights f
+            INNER JOIN airlines a ON f.airline_id = a.id AND a.is_deleted = FALSE
+            INNER JOIN aircraft_types ac ON f.aircraft_type_id = ac.id AND ac.is_deleted = FALSE
+            INNER JOIN airports dep ON f.departure_airport_id = dep.id AND dep.is_deleted = FALSE
+            INNER JOIN airports arr ON f.arrival_airport_id = arr.id AND arr.is_deleted = FALSE
+            WHERE f.is_deleted = FALSE
+            ORDER BY f.scheduled_departure DESC
+            LIMIT ? OFFSET ?
+            """;
+
+        // Execute paginated query
+        List<FlightDTO> content = jdbcTemplate.query(
+                dataSql,
+                new FlightDtoRowMapper(),
+                pageable.getPageSize(),
+                pageable.getOffset()
+        );
+
+        // Count query for pagination metadata
+        String countSql = "SELECT COUNT(*) FROM flights WHERE is_deleted = FALSE";
+        Long total = jdbcTemplate.queryForObject(countSql, Long.class);
+
+        return new PageImpl<>(content, pageable, total);
+    }
+
     private static class FlightRowMapper implements RowMapper<Flight> {
         @Override
-        public Flight mapRow(java.sql.ResultSet rs, int rowNum) throws java.sql.SQLException {
+        public Flight mapRow(ResultSet rs, int rowNum) throws SQLException {
             Flight flight = new Flight();
 
             // Basic identifiers
@@ -136,6 +194,70 @@ public class FlightRepositoryImplDAO implements FlightRepositoryDAO {
             flight.setUpdatedAt(rs.getTimestamp("updated_at").toLocalDateTime());
 
             return flight;
+        }
+    }
+
+    private static class FlightDtoRowMapper implements RowMapper<FlightDTO> {
+
+        @Override
+        public FlightDTO mapRow(ResultSet rs, int rowNum) throws SQLException {
+            FlightDTO flightDTO = new FlightDTO();
+
+            // Basic flight information
+            flightDTO.setFlightUUID(rs.getString("flight_uuid"));
+            flightDTO.setFlightNumber(rs.getString("flight_number"));
+            flightDTO.setScheduledDeparture(rs.getTimestamp("scheduled_departure").toLocalDateTime());
+            flightDTO.setScheduledArrival(rs.getTimestamp("scheduled_arrival").toLocalDateTime());
+
+            // Handle potentially null actual timestamps
+            Timestamp actualDeparture = rs.getTimestamp("actual_departure");
+            flightDTO.setActualDeparture(actualDeparture != null ? actualDeparture.toLocalDateTime() : null);
+
+            Timestamp actualArrival = rs.getTimestamp("actual_arrival");
+            flightDTO.setActualArrival(actualArrival != null ? actualArrival.toLocalDateTime() : null);
+
+            flightDTO.setStatus(FlightStatus.valueOf(rs.getString("status")));
+            flightDTO.setBaseEconomyPrice(rs.getBigDecimal("base_economy_price"));
+            flightDTO.setBaseBusinessPrice(rs.getBigDecimal("base_business_price"));
+            flightDTO.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
+            flightDTO.setUpdatedAt(rs.getTimestamp("updated_at").toLocalDateTime());
+
+            // Airline information
+            flightDTO.setAirlineUUID(rs.getString("airline_uuid"));
+            flightDTO.setAirlineCode(rs.getString("airline_code"));
+            flightDTO.setAirlineName(rs.getString("airline_name"));
+            flightDTO.setAirlineCountry(rs.getString("airline_country"));
+            flightDTO.setAirlineLogoUrl(rs.getString("airline_logo_url"));
+
+            // Aircraft type information
+            flightDTO.setAircraftTypeUUID(rs.getString("aircraft_type_uuid"));
+            flightDTO.setAircraftModel(rs.getString("aircraft_model"));
+            flightDTO.setManufacturer(rs.getString("manufacturer"));
+            flightDTO.setTotalSeats(rs.getInt("total_seats"));
+            flightDTO.setBusinessClassSeats(rs.getInt("business_class_seats"));
+            flightDTO.setEconomyClassSeats(rs.getInt("economy_class_seats"));
+
+            // Departure airport information
+            FlightDTO.AirportInfo departureAirport = new FlightDTO.AirportInfo();
+            departureAirport.setAirportUUID(rs.getString("dep_airport_uuid"));
+            departureAirport.setAirportCode(rs.getString("dep_airport_code"));
+            departureAirport.setAirportName(rs.getString("dep_airport_name"));
+            departureAirport.setCity(rs.getString("dep_city"));
+            departureAirport.setCountry(rs.getString("dep_country"));
+            departureAirport.setTimezone(rs.getString("dep_timezone"));
+            flightDTO.setDepartureAirport(departureAirport);
+
+            // Arrival airport information
+            FlightDTO.AirportInfo arrivalAirport = new FlightDTO.AirportInfo();
+            arrivalAirport.setAirportUUID(rs.getString("arr_airport_uuid"));
+            arrivalAirport.setAirportCode(rs.getString("arr_airport_code"));
+            arrivalAirport.setAirportName(rs.getString("arr_airport_name"));
+            arrivalAirport.setCity(rs.getString("arr_city"));
+            arrivalAirport.setCountry(rs.getString("arr_country"));
+            arrivalAirport.setTimezone(rs.getString("arr_timezone"));
+            flightDTO.setArrivalAirport(arrivalAirport);
+
+            return flightDTO;
         }
     }
 }
