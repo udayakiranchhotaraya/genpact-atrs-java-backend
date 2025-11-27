@@ -16,4 +16,5 @@ public interface FlightRepositoryDAO {
     Page<FlightDTO> findAll(Pageable pageable);
     public Page<FlightDTO> searchFlights(FlightSearchCriteria criteria, Pageable pageable);
     public Map<String, Integer> getSeatsAvailability(String flightUUID);
+    Flight update(Flight flight);
 }

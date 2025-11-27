@@ -3,6 +3,7 @@ package com.capstone.airlineticketreservationsystem.flights.services;
 import com.capstone.airlineticketreservationsystem.flights.dtos.CreateFlightRequest;
 import com.capstone.airlineticketreservationsystem.flights.dtos.FlightDTO;
 import com.capstone.airlineticketreservationsystem.flights.dtos.FlightSearchCriteria;
+import com.capstone.airlineticketreservationsystem.flights.dtos.UpdateFlightRequest;
 import com.capstone.airlineticketreservationsystem.flights.exceptions.*;
 import com.capstone.airlineticketreservationsystem.flights.models.AircraftType;
 import com.capstone.airlineticketreservationsystem.flights.models.Airline;
@@ -95,6 +96,20 @@ public class FlightService {
         List<FlightDTO> sortedFlights = applyCustomSorting(pricedFlights, criteria);
 
         return new PageImpl<>(sortedFlights, pageable, flightPage.getTotalElements());
+    }
+
+    public FlightDTO updateFlight(String flightUUID, UpdateFlightRequest updateFlightRequest) {
+
+        Flight existingFlight = flightRepository.findByFlightUUID(flightUUID)
+                .orElseThrow(() -> new FlightNotFoundException("Flight not found with UUID: " + flightUUID));
+
+        EntityLookupService.FlightRequiredIds resolvedIds = entityLookupService.resolveFlightDependencies(updateFlightRequest);
+
+        updateFlightEntity(existingFlight, resolvedIds, updateFlightRequest);
+
+        Flight updatedFlight = flightRepository.update(existingFlight);
+
+        return buildCompleteFlightDTO(updatedFlight);
     }
 
     private void validateFlightBusinessRules(EntityLookupService.FlightRequiredIds ids, CreateFlightRequest request) {
@@ -318,5 +333,45 @@ public class FlightService {
         clone.setCurrentPrice(original.getCurrentPrice());
 
         return clone;
+    }
+
+    private void updateFlightEntity(Flight flight, EntityLookupService.FlightRequiredIds ids, UpdateFlightRequest request) {
+        // Update only non-null fields (partial update)
+        if (request.getFlightNumber() != null) {
+            flight.setFlightNumber(request.getFlightNumber());
+        }
+        if (request.getAirlineUUID() != null) {
+            flight.setAirlineId(ids.airlineId());
+        }
+        if (request.getAircraftTypeUUID() != null) {
+            flight.setAircraftTypeId(ids.aircraftTypeId());
+        }
+        if (request.getDepartureAirportUUID() != null) {
+            flight.setDepartureAirportId(ids.departureAirportId());
+        }
+        if (request.getArrivalAirportUUID() != null) {
+            flight.setArrivalAirportId(ids.arrivalAirportId());
+        }
+        if (request.getScheduledDeparture() != null) {
+            flight.setScheduledDeparture(request.getScheduledDeparture());
+        }
+        if (request.getScheduledArrival() != null) {
+            flight.setScheduledArrival(request.getScheduledArrival());
+        }
+        if (request.getActualDeparture() != null) {
+            flight.setActualDeparture(request.getActualDeparture());
+        }
+        if (request.getActualArrival() != null) {
+            flight.setActualArrival(request.getActualArrival());
+        }
+        if (request.getStatus() != null) {
+            flight.setStatus(request.getStatus());
+        }
+        if (request.getBaseEconomyPrice() != null) {
+            flight.setBaseEconomyPrice(request.getBaseEconomyPrice());
+        }
+        if (request.getBaseBusinessPrice() != null) {
+            flight.setBaseBusinessPrice(request.getBaseBusinessPrice());
+        }
     }
 }

@@ -252,6 +252,41 @@ public class FlightRepositoryImplDAO implements FlightRepositoryDAO {
         }
     }
 
+    @Override
+    public Flight update(Flight flight) {
+        String sql = """
+            UPDATE flights 
+            SET flight_number = ?, airline_id = ?, aircraft_type_id = ?,
+                departure_airport_id = ?, arrival_airport_id = ?,
+                scheduled_departure = ?, scheduled_arrival = ?,
+                actual_departure = ?, actual_arrival = ?,
+                status = ?, base_economy_price = ?, base_business_price = ?,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE flights_uuid = ? AND is_deleted = FALSE
+            """;
+
+        int rowsAffected = jdbcTemplate.update(sql,
+                flight.getFlightNumber(),
+                flight.getAirlineId(),
+                flight.getAircraftTypeId(),
+                flight.getDepartureAirportId(),
+                flight.getArrivalAirportId(),
+                flight.getScheduledDeparture(),
+                flight.getScheduledArrival(),
+                flight.getActualDeparture(),
+                flight.getActualArrival(),
+                flight.getStatus().toString(),
+                flight.getBaseEconomyPrice(),
+                flight.getBaseBusinessPrice(),
+                flight.getFlightUUID()
+        );
+
+        if (rowsAffected == 0) {
+            throw new FlightNotFoundException("Flight not found or it has been deleted");
+        }
+        return flight;
+    }
+
     private static class FlightRowMapper implements RowMapper<Flight> {
         @Override
         public Flight mapRow(ResultSet rs, int rowNum) throws SQLException {

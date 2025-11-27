@@ -1,6 +1,7 @@
 package com.capstone.airlineticketreservationsystem.flights.services;
 
 import com.capstone.airlineticketreservationsystem.flights.dtos.CreateFlightRequest;
+import com.capstone.airlineticketreservationsystem.flights.dtos.UpdateFlightRequest;
 import com.capstone.airlineticketreservationsystem.flights.exceptions.AircraftTypeNotFoundException;
 import com.capstone.airlineticketreservationsystem.flights.exceptions.AirlineNotFoundException;
 import com.capstone.airlineticketreservationsystem.flights.exceptions.AirportNotFoundException;
@@ -37,11 +38,20 @@ public class EntityLookupService {
                 .orElseThrow(() -> new AircraftTypeNotFoundException("Aircraft type not found with UUID: " + aircraftTypeUUID));
     }
 
-    public FlightRequiredIds resolveFlightDependencies(CreateFlightRequest request) {
-        Long airlineId = getAirlineIdByUUID(request.getAirlineUUID());
-        Long aircraftTypeId = getAircraftTypeIdByUUID(request.getAircraftTypeUUID());
-        Long departureAirportId = getAirportIdByUUID(request.getDepartureAirportUUID());
-        Long arrivalAirportId = getAirportIdByUUID(request.getArrivalAirportUUID());
+    public FlightRequiredIds resolveFlightDependencies(CreateFlightRequest createFlightRequest) {
+        Long airlineId = getAirlineIdByUUID(createFlightRequest.getAirlineUUID());
+        Long aircraftTypeId = getAircraftTypeIdByUUID(createFlightRequest.getAircraftTypeUUID());
+        Long departureAirportId = getAirportIdByUUID(createFlightRequest.getDepartureAirportUUID());
+        Long arrivalAirportId = getAirportIdByUUID(createFlightRequest.getArrivalAirportUUID());
+
+        return new FlightRequiredIds(airlineId, aircraftTypeId, departureAirportId, arrivalAirportId);
+    }
+
+    public FlightRequiredIds resolveFlightDependencies(UpdateFlightRequest updateFlightRequest) {
+        Long airlineId = getAirlineIdByUUID(updateFlightRequest.getAirlineUUID());
+        Long aircraftTypeId = getAircraftTypeIdByUUID(updateFlightRequest.getAircraftTypeUUID());
+        Long departureAirportId = getAirportIdByUUID(updateFlightRequest.getDepartureAirportUUID());
+        Long arrivalAirportId = getAirportIdByUUID(updateFlightRequest.getArrivalAirportUUID());
 
         return new FlightRequiredIds(airlineId, aircraftTypeId, departureAirportId, arrivalAirportId);
     }

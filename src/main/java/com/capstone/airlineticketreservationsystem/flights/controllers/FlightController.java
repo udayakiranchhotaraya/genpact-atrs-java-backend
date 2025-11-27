@@ -3,6 +3,7 @@ package com.capstone.airlineticketreservationsystem.flights.controllers;
 import com.capstone.airlineticketreservationsystem.flights.dtos.CreateFlightRequest;
 import com.capstone.airlineticketreservationsystem.flights.dtos.FlightDTO;
 import com.capstone.airlineticketreservationsystem.flights.dtos.FlightSearchCriteria;
+import com.capstone.airlineticketreservationsystem.flights.dtos.UpdateFlightRequest;
 import com.capstone.airlineticketreservationsystem.flights.services.FlightService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,6 +56,15 @@ public class FlightController {
         Page<FlightDTO> results = flightService.searchFlights(criteria, pageable);
 
         return new ResponseEntity<>(results, HttpStatus.OK);
+    }
+
+    @PutMapping(value = "/{flightUUID}")
+    public ResponseEntity<FlightDTO> updateFlight(
+            @PathVariable String flightUUID,
+            @Valid @RequestBody UpdateFlightRequest updateFlightRequest) {
+
+        FlightDTO updatedFlight = flightService.updateFlight(flightUUID, updateFlightRequest);
+        return new ResponseEntity<>(updatedFlight, HttpStatus.OK);
     }
 
     @GetMapping("/health")
