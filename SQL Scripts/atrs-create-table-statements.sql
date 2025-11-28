@@ -113,6 +113,7 @@ CREATE TABLE users (
     date_of_birth DATE NULL,
     passport_number VARCHAR(50) NULL,
     profile_picture_url VARCHAR(500) NULL COMMENT 'S3 URL for user profile picture',
+    is_admin BOOLEAN NOT NULL DEFAULT FALSE COMMENT 'TRUE for admins with operational privileges',
     frequent_flyer_tier ENUM('NONE', 'SILVER', 'GOLD', 'PLATINUM') NOT NULL DEFAULT 'NONE',
     is_deleted BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -121,7 +122,9 @@ CREATE TABLE users (
     CONSTRAINT pk_users PRIMARY KEY (id),
     CONSTRAINT uq_users_uuid UNIQUE (users_uuid),
     CONSTRAINT uq_users_email UNIQUE (email),
-    INDEX idx_users_email (email, is_deleted)
+    CONSTRAINT uq_users_phone_number UNIQUE (phone_number),
+    INDEX idx_users_email (email, is_deleted),
+    INDEX idx_users_admin (is_admin, is_deleted)
 );
 
 -- =====================================================
