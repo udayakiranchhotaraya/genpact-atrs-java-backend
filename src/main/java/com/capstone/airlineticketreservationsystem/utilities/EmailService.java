@@ -3,6 +3,7 @@ package com.capstone.airlineticketreservationsystem.utilities;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 
@@ -11,7 +12,16 @@ public class EmailService {
     @Autowired
     private JavaMailSender mailSender;
 
-    public void sendHtmlVerificationEmail(String toEmail, String verificationUrl) throws MessagingException {
+    @Autowired
+    private JwtTokenUtil jwtTokenUtil;
+
+    @Value("${app.base.url}")
+    private String baseUrl;
+
+    public void sendHtmlVerificationEmail(String toEmail, String userUUID) throws MessagingException {
+        String token = jwtTokenUtil.generateVerificationToken(userUUID, toEmail);
+        String verificationUrl = baseUrl + "/set-password?token=" + token;
+
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
