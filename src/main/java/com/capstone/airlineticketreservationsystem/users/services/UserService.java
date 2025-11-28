@@ -14,6 +14,9 @@ import com.capstone.airlineticketreservationsystem.utilities.JwtTokenUtil;
 import jakarta.mail.MessagingException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 public class UserService {
 
     public UserService(JwtTokenUtil jwtTokenUtil, UserRepositoryDAO userRepository, PasswordEncoder passwordEncoder, EmailService emailService) {
@@ -65,9 +68,16 @@ public class UserService {
         );
     }
 
-    public UserDTO getUserByUUID(String USER_UUID) {
-        User user = userRepository.findByUUID(USER_UUID)
-                .orElseThrow(() -> new UserNotFoundException("User not found with UUID: " + USER_UUID));
+    public List<UserDTO> getAllUsers() {
+        List<User> users = userRepository.findAll();
+        return users.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    public UserDTO getUserByUUID(String userUUID) {
+        User user = userRepository.findByUUID(userUUID)
+                .orElseThrow(() -> new UserNotFoundException("User not found with UUID: " + userUUID));
         return convertToDTO(user);
     }
 
@@ -77,10 +87,10 @@ public class UserService {
         return convertToDTO(user);
     }
 
-    public UserDTO updateUser(String USER_UUID, UpdateUserRequest updateUserRequest) {
+    public UserDTO updateUser(String userUUID, UpdateUserRequest updateUserRequest) {
         // Finding the existing user
-        User existingUser = userRepository.findByUUID(USER_UUID)
-                .orElseThrow(() -> new UserNotFoundException("User not found with UUID: " + USER_UUID));
+        User existingUser = userRepository.findByUUID(userUUID)
+                .orElseThrow(() -> new UserNotFoundException("User not found with UUID: " + userUUID));
 
         // Manually checking and updating each provided field
         if (updateUserRequest.getEmail() != null) {
@@ -120,9 +130,9 @@ public class UserService {
         return convertToDTO(updatedUser);
     }
 
-    public void setPassword(String USER_UUID, SetPasswordRequest setPasswordRequest) {
-        User user = userRepository.findByUUID(USER_UUID)
-                .orElseThrow(() -> new UserNotFoundException("User not found with UUID: " + USER_UUID));
+    public void setPassword(String userUUID, SetPasswordRequest setPasswordRequest) {
+        User user = userRepository.findByUUID(userUUID)
+                .orElseThrow(() -> new UserNotFoundException("User not found with UUID: " + userUUID));
 
         // Encode and set the new password
         user.setPasswordHash(passwordEncoder.encode(setPasswordRequest.getPassword()));
@@ -137,6 +147,18 @@ public class UserService {
         // Update password logic here
         user.setPasswordHash(passwordEncoder.encode(setPasswordRequest.getPassword()));
         userRepository.updatePassword(user);
+    }
+
+    public void deleteUser(String userUUID) {
+        // Verify the user exists and is not already deleted
+        User existingUser = userRepository.findByUUID(userUUID)
+                .orElseThrow(() -> new UserNotFoundException("User not found with UUID: " + userUUID));
+
+        int rowsAffected = userRepository.softDeleteByUUID(userUUID);
+
+        if (rowsAffected == 0) {
+            throw new RuntimeException("Failed to delete user");
+        }
     }
 
     private UserDTO convertToDTO(User user) {

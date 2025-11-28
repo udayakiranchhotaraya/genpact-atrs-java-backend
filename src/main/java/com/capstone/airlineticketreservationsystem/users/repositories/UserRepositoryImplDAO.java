@@ -10,6 +10,7 @@ import org.springframework.jdbc.support.KeyHolder;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.List;
 import java.util.Optional;
 
 import static com.capstone.airlineticketreservationsystem.utilities.UUIDV7Generator.generateUUIDV7;
@@ -136,10 +137,16 @@ public class UserRepositoryImplDAO implements UserRepositoryDAO {
     }
 
     @Override
-    public Optional<User> findByUUID(String USER_UUID) {
+    public List<User> findAll() {
+        String sql = "SELECT * FROM users WHERE is_deleted = false ORDER BY created_at DESC";
+        return jdbcTemplate.query(sql, new UserRowMapper());
+    }
+
+    @Override
+    public Optional<User> findByUUID(String userUUID) {
         try {
             String sql = "SELECT * FROM users WHERE users_uuid = ? AND is_deleted = false";
-            User user = jdbcTemplate.queryForObject(sql, new UserRowMapper(), USER_UUID);
+            User user = jdbcTemplate.queryForObject(sql, new UserRowMapper(), userUUID);
             return Optional.ofNullable(user);
         } catch (Exception e) {
             return Optional.empty();
@@ -173,6 +180,12 @@ public class UserRepositoryImplDAO implements UserRepositoryDAO {
         String sql = "SELECT COUNT(*) FROM users WHERE email = ? AND is_deleted = false";
         Integer count = jdbcTemplate.queryForObject(sql, Integer.class, email);
         return count != null && count > 0;
+    }
+
+    @Override
+    public int softDeleteByUUID(String userUUID) {
+        String sql = "UPDATE users SET is_deleted = true, updated_at = CURRENT_TIMESTAMP WHERE users_uuid = ? AND is_deleted = false";
+        return jdbcTemplate.update(sql, userUUID);
     }
 
     private static class UserRowMapper implements RowMapper<User> {
