@@ -9,17 +9,24 @@ import com.capstone.airlineticketreservationsystem.users.exceptions.UserNotFound
 import com.capstone.airlineticketreservationsystem.users.models.FrequentFlyerTier;
 import com.capstone.airlineticketreservationsystem.users.models.User;
 import com.capstone.airlineticketreservationsystem.users.repositories.UserRepositoryDAO;
+import com.capstone.airlineticketreservationsystem.utilities.EmailService;
+import com.capstone.airlineticketreservationsystem.utilities.JwtTokenUtil;
+import jakarta.mail.MessagingException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 public class UserService {
 
-    public UserService(UserRepositoryDAO userRepository, PasswordEncoder passwordEncoder) {
+    public UserService(JwtTokenUtil jwtTokenUtil, UserRepositoryDAO userRepository, PasswordEncoder passwordEncoder, EmailService emailService) {
+        this.jwtTokenUtil = jwtTokenUtil;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.emailService = emailService;
     }
 
     private final UserRepositoryDAO userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final EmailService emailService;
+    private final JwtTokenUtil jwtTokenUtil;
 
     public UserDTO createUser(CreateUserRequest createUserRequest) {
 
@@ -36,7 +43,12 @@ public class UserService {
 
         User savedUser = userRepository.save(user);
 
-        // TODO: Send verification email with savedUser.getUserUUID()
+        // Send verification email
+        try {
+            emailService.sendHtmlVerificationEmail(savedUser.getEmail(), savedUser.getUserUUID());
+        } catch (MessagingException e) {
+            throw new RuntimeException("Failed to send verification email", e);
+        }
 
         return new UserDTO(
                 savedUser.getUserUUID(),
@@ -113,6 +125,16 @@ public class UserService {
                 .orElseThrow(() -> new UserNotFoundException("User not found with UUID: " + USER_UUID));
 
         // Encode and set the new password
+        user.setPasswordHash(passwordEncoder.encode(setPasswordRequest.getPassword()));
+        userRepository.updatePassword(user);
+    }
+
+    public void verifyTokenAndSetPassword(String token, SetPasswordRequest setPasswordRequest) {
+        String userUUID = jwtTokenUtil.validateTokenAndGetUserUUID(token);
+        User user = userRepository.findByUUID(userUUID)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+
+        // Update password logic here
         user.setPasswordHash(passwordEncoder.encode(setPasswordRequest.getPassword()));
         userRepository.updatePassword(user);
     }
