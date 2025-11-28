@@ -14,6 +14,9 @@ public class JwtTokenUtil {
     @Value("${jwt.secret}")
     private String secret;
 
+    @Value("${jwt.expiration:86400000}") // Default 24 hours
+    private Long expiration;
+
     @Value("${jwt.verification.expiration}")
     private Long verificationExpiration;
 
@@ -56,6 +59,7 @@ public class JwtTokenUtil {
         }
     }
 
+    /*
     public String getEmailFromToken(String token) {
         Claims claims = Jwts.parserBuilder()
                 .setSigningKey(getSigningKey())
@@ -64,5 +68,52 @@ public class JwtTokenUtil {
                 .getBody();
 
         return claims.get("email", String.class);
+    }
+     */
+
+    public String generateAccessToken(String userUUID, String email, String role) {
+        Date now = new Date();
+        Date expiryDate = new Date(now.getTime() + expiration);
+
+        return Jwts.builder()
+                .setSubject(userUUID) // UUID as subject (primary identifier)
+                .claim("email", email) // Email as custom claim
+                .claim("role", role) // Role as custom claim
+                .setIssuedAt(now)
+                .setExpiration(expiryDate)
+                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+    public String getUserUUIDFromToken(String token) {
+        Claims claims = extractAllClaims(token);
+        return claims.getSubject(); // Subject is now the userUUID
+    }
+
+    public String getEmailFromToken(String token) {
+        Claims claims = extractAllClaims(token);
+        return claims.get("email", String.class);
+    }
+
+    public String getRoleFromToken(String token) {
+        Claims claims = extractAllClaims(token);
+        return claims.get("role", String.class);
+    }
+
+    public boolean validateToken(String token) {
+        try {
+            extractAllClaims(token);
+            return true;
+        } catch (JwtException | IllegalArgumentException e) {
+            return false;
+        }
+    }
+
+    private Claims extractAllClaims(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(getSigningKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
     }
 }

@@ -9,6 +9,7 @@ public interface UserRepositoryDAO {
     User update(User user);
     Optional<User> findByUUID(String userUUID);
     Optional<User> findByEmail(String email);
+    Optional<User> findByPhoneNumber(String phoneNumber);
     Boolean existsByEmail(String email);
     void updatePassword(User user);
 }

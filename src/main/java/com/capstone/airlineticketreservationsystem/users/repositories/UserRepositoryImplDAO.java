@@ -158,6 +158,17 @@ public class UserRepositoryImplDAO implements UserRepositoryDAO {
     }
 
     @Override
+    public Optional<User> findByPhoneNumber(String phoneNumber) {
+        try {
+            String sql = "SELECT * FROM users WHERE phone_number = ? AND is_deleted = false";
+            User user = jdbcTemplate.queryForObject(sql, new UserRowMapper(), phoneNumber);
+            return Optional.ofNullable(user);
+        } catch (Exception e) {
+            return Optional.empty();
+        }
+    }
+
+    @Override
     public Boolean existsByEmail(String email) {
         String sql = "SELECT COUNT(*) FROM users WHERE email = ? AND is_deleted = false";
         Integer count = jdbcTemplate.queryForObject(sql, Integer.class, email);
