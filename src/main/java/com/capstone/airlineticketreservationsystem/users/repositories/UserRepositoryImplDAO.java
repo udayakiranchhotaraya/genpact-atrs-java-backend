@@ -60,8 +60,8 @@ public class UserRepositoryImplDAO implements UserRepositoryDAO {
 
             preparedStatement.setString(8, user.getPassportNumber());
             preparedStatement.setString(9, user.getProfilePictureURL());
-            preparedStatement.setBoolean(10, user.getAdmin() != null ? user.getAdmin() : false);
-            preparedStatement.setString(11, user.getFrequentFlyerTier() != null ? user.getFrequentFlyerTier().name() : FrequentFlyerTier.NONE.toString());
+            preparedStatement.setBoolean(10, user.getAdmin());
+            preparedStatement.setString(11, user.getFrequentFlyerTier().name());
 
             return preparedStatement;
         }, keyHolder);
@@ -70,9 +70,8 @@ public class UserRepositoryImplDAO implements UserRepositoryDAO {
         if (key != null) {
             user.setId(key.longValue());
 
-            String selectSql = "SELECT frequent_flyer_tier, created_at FROM users WHERE id = ?";
+            String selectSql = "SELECT created_at FROM users WHERE id = ?";
             return jdbcTemplate.queryForObject(selectSql, (rs, rowNum) -> {
-            	user.setFrequentFlyerTier(FrequentFlyerTier.valueOf(rs.getString("frequent_flyer_tier")));
                 user.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
                 return user;
             }, key.longValue());

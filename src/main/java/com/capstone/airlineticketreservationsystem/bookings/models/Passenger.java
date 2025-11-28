@@ -1,35 +1,32 @@
-package com.capstone.airlineticketreservationsystem.users.models;
+package com.capstone.airlineticketreservationsystem.bookings.models;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-public class User {
+public class Passenger {
 
-    public User() {
+    public Passenger() {
     }
 
-    public User(String email, String passwordHash, String firstName, String lastName) {
-        this.email = email;
-        this.passwordHash = passwordHash;
+    public Passenger(String firstName, String lastName, LocalDate dateOfBirth, String passportNumber, String nationality, Long bookingId) {
         this.firstName = firstName;
         this.lastName = lastName;
-        this.isAdmin = false;
-        this.frequentFlyerTier = FrequentFlyerTier.NONE;
-        this.isDeleted = false;
+        this.dateOfBirth = dateOfBirth;
+        this.passportNumber = passportNumber;
+        this.nationality = nationality;
+        this.bookingId = bookingId;
     }
 
     private Long id;
-    private String userUUID;
-    private String email;
-    private String passwordHash;
+    private String passengersUUID;
+    private Long bookingId;
+    private Long userId;
     private String firstName;
     private String lastName;
-    private String phoneNumber;
     private LocalDate dateOfBirth;
     private String passportNumber;
-    private String profilePictureURL;
-    private Boolean isAdmin;
-    private FrequentFlyerTier frequentFlyerTier;
+    private String nationality;
+    private PassengerType passengerType;
     private Boolean isDeleted;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -42,28 +39,28 @@ public class User {
         this.id = id;
     }
 
-    public String getUserUUID() {
-        return userUUID;
+    public String getPassengersUUID() {
+        return passengersUUID;
     }
 
-    public void setUserUUID(String userUUID) {
-        this.userUUID = userUUID;
+    public void setPassengersUUID(String passengersUUID) {
+        this.passengersUUID = passengersUUID;
     }
 
-    public String getEmail() {
-        return email;
+    public Long getBookingId() {
+        return bookingId;
     }
 
-    public void setEmail(String email) {
-        this.email = email;
+    public void setBookingId(Long bookingId) {
+        this.bookingId = bookingId;
     }
 
-    public String getPasswordHash() {
-        return passwordHash;
+    public Long getUserId() {
+        return userId;
     }
 
-    public void setPasswordHash(String passwordHash) {
-        this.passwordHash = passwordHash;
+    public void setUserId(Long userId) {
+        this.userId = userId;
     }
 
     public String getFirstName() {
@@ -82,14 +79,6 @@ public class User {
         this.lastName = lastName;
     }
 
-    public String getPhoneNumber() {
-        return phoneNumber;
-    }
-
-    public void setPhoneNumber(String phoneNumber) {
-        this.phoneNumber = phoneNumber;
-    }
-
     public LocalDate getDateOfBirth() {
         return dateOfBirth;
     }
@@ -106,28 +95,20 @@ public class User {
         this.passportNumber = passportNumber;
     }
 
-    public String getProfilePictureURL() {
-        return profilePictureURL;
+    public String getNationality() {
+        return nationality;
     }
 
-    public void setProfilePictureURL(String profilePictureURL) {
-        this.profilePictureURL = profilePictureURL;
+    public void setNationality(String nationality) {
+        this.nationality = nationality;
     }
 
-    public Boolean getAdmin() {
-        return isAdmin;
+    public PassengerType getPassengerType() {
+        return passengerType;
     }
 
-    public void setAdmin(Boolean admin) {
-        isAdmin = admin;
-    }
-
-    public FrequentFlyerTier getFrequentFlyerTier() {
-        return frequentFlyerTier;
-    }
-
-    public void setFrequentFlyerTier(FrequentFlyerTier frequentFlyerTier) {
-        this.frequentFlyerTier = frequentFlyerTier;
+    public void setPassengerType(PassengerType passengerType) {
+        this.passengerType = passengerType;
     }
 
     public Boolean getDeleted() {
