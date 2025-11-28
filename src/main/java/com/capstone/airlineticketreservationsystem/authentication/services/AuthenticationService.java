@@ -35,6 +35,7 @@ public class AuthenticationService {
         if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPasswordHash())) {
             throw new InvalidCredentialsException("Invalid password");
         }
+//        if (!loginRequest.getPassword().matches(user.getPasswordHash())) throw new InvalidCredentialsException("Invalid password");
 
         // Check if user is verified and active
         if (user.getDeleted()) {

@@ -13,10 +13,12 @@ import com.capstone.airlineticketreservationsystem.utilities.EmailService;
 import com.capstone.airlineticketreservationsystem.utilities.JwtTokenUtil;
 import jakarta.mail.MessagingException;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Service
 public class UserService {
 
     public UserService(JwtTokenUtil jwtTokenUtil, UserRepositoryDAO userRepository, PasswordEncoder passwordEncoder, EmailService emailService) {

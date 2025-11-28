@@ -6,6 +6,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
+import org.springframework.stereotype.Repository;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -15,6 +16,7 @@ import java.util.Optional;
 
 import static com.capstone.airlineticketreservationsystem.utilities.UUIDV7Generator.generateUUIDV7;
 
+@Repository
 public class UserRepositoryImplDAO implements UserRepositoryDAO {
 
     public UserRepositoryImplDAO(JdbcTemplate jdbcTemplate) {
@@ -30,8 +32,8 @@ public class UserRepositoryImplDAO implements UserRepositoryDAO {
                 INSERT INTO users (
                     users_uuid, email, password_hash, first_name, last_name,
                     phone_number, date_of_birth, passport_number, profile_picture_url,
-                    is_admin, frequent_flyer_tier, is_deleted
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    is_admin, frequent_flyer_tier
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """;
 
         KeyHolder keyHolder = new GeneratedKeyHolder();
@@ -58,9 +60,8 @@ public class UserRepositoryImplDAO implements UserRepositoryDAO {
 
             preparedStatement.setString(8, user.getPassportNumber());
             preparedStatement.setString(9, user.getProfilePictureURL());
-            preparedStatement.setBoolean(10, user.getAdmin());
-            preparedStatement.setString(11, user.getFrequentFlyerTier().name());
-            preparedStatement.setBoolean(12, user.getDeleted());
+            preparedStatement.setBoolean(10, user.getAdmin() != null ? user.getAdmin() : false);
+            preparedStatement.setString(11, user.getFrequentFlyerTier() != null ? user.getFrequentFlyerTier().name() : FrequentFlyerTier.NONE.toString());
 
             return preparedStatement;
         }, keyHolder);
@@ -69,8 +70,9 @@ public class UserRepositoryImplDAO implements UserRepositoryDAO {
         if (key != null) {
             user.setId(key.longValue());
 
-            String selectSql = "SELECT created_at FROM users WHERE id = ?";
+            String selectSql = "SELECT frequent_flyer_tier, created_at FROM users WHERE id = ?";
             return jdbcTemplate.queryForObject(selectSql, (rs, rowNum) -> {
+            	user.setFrequentFlyerTier(FrequentFlyerTier.valueOf(rs.getString("frequent_flyer_tier")));
                 user.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
                 return user;
             }, key.longValue());
