@@ -1,5 +1,7 @@
 package com.capstone.airlineticketreservationsystem.flights.repositories;
 
+import java.time.LocalDate;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -20,4 +22,11 @@ public interface FlightRepositoryDAO {
     int softDeleteByUUID(String flightUUID);
     boolean existsByUUIDAndNotDeleted(String flightUUID);
     Optional<Flight> findById(Long id);
+    Optional<Long> findIdByUUID(String flightUUID);
+    List<Flight> searchFlights(String origin, String destination, LocalDate date);
+    
+    int reduceSeatCount(Long flightId, String seatClass, int count);
+    int increaseSeatCount(Long flightId, String seatClass, int count);
+
+
 }

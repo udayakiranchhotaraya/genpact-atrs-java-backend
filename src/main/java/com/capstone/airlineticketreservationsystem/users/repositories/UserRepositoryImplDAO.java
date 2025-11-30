@@ -217,4 +217,29 @@ public class UserRepositoryImplDAO implements UserRepositoryDAO {
             return user;
         }
     }
+    
+    @Override
+    public Optional<User> findById(Long id) {
+        try {
+            String sql = "SELECT * FROM users WHERE id = ? AND is_deleted = false";
+            User user = jdbcTemplate.queryForObject(sql, new UserRowMapper(), id);
+            return Optional.ofNullable(user);
+        } catch (Exception e) {
+            return Optional.empty();
+        }
+    }
+    
+    @Override
+    public Optional<Long> findIdByUUID(String userUUID) {
+        String sql = "SELECT id FROM users WHERE users_uuid = ? AND is_deleted = false";
+
+        try {
+            Long id = jdbcTemplate.queryForObject(sql, Long.class, userUUID);
+            return Optional.ofNullable(id);
+        } catch (Exception e) {
+            return Optional.empty();
+        }
+    }
+
+
 }

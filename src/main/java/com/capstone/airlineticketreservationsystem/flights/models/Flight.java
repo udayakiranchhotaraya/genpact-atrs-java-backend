@@ -41,6 +41,9 @@ public class Flight {
     private Boolean isDeleted;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private Integer economyAvailableSeats;
+    private Integer businessAvailableSeats;
+
 
     public Long getId() {
         return id;
@@ -177,5 +180,22 @@ public class Flight {
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
+    
+    public Integer getEconomyAvailableSeats() {
+        return economyAvailableSeats;
+    }
+
+    public void setEconomyAvailableSeats(Integer economyAvailableSeats) {
+        this.economyAvailableSeats = economyAvailableSeats;
+    }
+
+    public Integer getBusinessAvailableSeats() {
+        return businessAvailableSeats;
+    }
+
+    public void setBusinessAvailableSeats(Integer businessAvailableSeats) {
+        this.businessAvailableSeats = businessAvailableSeats;
+    }
+
 }
 

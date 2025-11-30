@@ -97,6 +97,10 @@ CREATE TABLE flights (
     INDEX idx_flights_airline (airline_id, flight_number, scheduled_departure)
 );
 
+ALTER TABLE flights ADD COLUMN economy_available_seats INT DEFAULT 100;
+ALTER TABLE flights ADD COLUMN business_available_seats INT DEFAULT 30;
+
+
 -- =====================================================
 -- USER MANAGEMENT
 -- =====================================================
@@ -151,6 +155,12 @@ CREATE TABLE bookings (
     INDEX idx_bookings_pnr (pnr, is_deleted)
 );
 
+
+ALTER TABLE bookings
+ADD COLUMN seat_class VARCHAR(20) NOT NULL DEFAULT 'ECONOMY'
+AFTER flight_id;
+
+
 -- Passengers Table (Individual travelers in a booking)
 CREATE TABLE passengers (
     id BIGINT UNSIGNED AUTO_INCREMENT,
@@ -175,6 +185,10 @@ CREATE TABLE passengers (
         REFERENCES users(id) ON DELETE SET NULL ON UPDATE CASCADE,
     INDEX idx_passengers_booking (booking_id, is_deleted)
 );
+
+ALTER TABLE passengers
+ADD COLUMN email VARCHAR(150) NULL AFTER last_name;
+
 
 -- Tickets Table (One ticket per passenger per flight)
 CREATE TABLE tickets (

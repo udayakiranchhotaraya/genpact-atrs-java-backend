@@ -35,7 +35,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
         // Skip filter for public endpoints
         if (path.startsWith("/auth/") || path.startsWith("/api/users/start-onboarding") ||
-                path.startsWith("/api/users/password")) {
+                path.startsWith("/api/users/set-password")) {
             filterChain.doFilter(request, response);
             return;
         }

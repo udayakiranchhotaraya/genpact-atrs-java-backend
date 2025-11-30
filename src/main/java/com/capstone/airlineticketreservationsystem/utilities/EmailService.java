@@ -2,6 +2,8 @@ package com.capstone.airlineticketreservationsystem.utilities;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
+import jakarta.mail.util.ByteArrayDataSource;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -41,4 +43,33 @@ public class EmailService {
 
         mailSender.send(message);
     }
+    
+    public void sendTicketEmail(String toEmail, String passengerName, byte[] pdfBytes)
+            throws MessagingException {
+
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+        helper.setFrom("genpactcapstoneatrs2025@gmail.com");
+        helper.setTo(toEmail);
+        helper.setSubject("Your Flight Ticket - Airline Reservation System");
+
+        String htmlContent = """
+                <h2>Your Flight Ticket</h2>
+                <p>Dear %s,</p>
+                <p>Your ticket has been successfully issued.</p>
+                <p>Please find the attached PDF ticket.</p>
+                <br/>
+                <p>Thank you for choosing our Airline Ticket Reservation System.</p>
+                """.formatted(passengerName);
+
+        helper.setText(htmlContent, true);
+
+        // Attach PDF
+        helper.addAttachment("ticket.pdf", new ByteArrayDataSource(pdfBytes, "application/pdf"));
+
+        mailSender.send(message);
+    }
+
+
 }

@@ -3,6 +3,7 @@ package com.capstone.airlineticketreservationsystem.flights.services;
 import com.capstone.airlineticketreservationsystem.flights.dtos.CreateFlightRequest;
 import com.capstone.airlineticketreservationsystem.flights.dtos.FlightDTO;
 import com.capstone.airlineticketreservationsystem.flights.dtos.FlightSearchCriteria;
+import com.capstone.airlineticketreservationsystem.flights.dtos.FlightSearchRequest;
 import com.capstone.airlineticketreservationsystem.flights.dtos.UpdateFlightRequest;
 import com.capstone.airlineticketreservationsystem.flights.exceptions.*;
 import com.capstone.airlineticketreservationsystem.flights.models.AircraftType;
@@ -386,4 +387,22 @@ public class FlightService {
             flight.setBaseBusinessPrice(request.getBaseBusinessPrice());
         }
     }
+    
+    private FlightDTO convertToDTO(Flight flight) {
+        return buildCompleteFlightDTO(flight);
+    }
+    
+    public List<FlightDTO> searchFlights(FlightSearchRequest req) {
+
+        List<Flight> flights = flightRepository.searchFlights(
+                req.getOriginAirportCode(),
+                req.getDestinationAirportCode(),
+                req.getDepartureDate()  // <-- LocalDate is correct
+        );
+
+        return flights.stream().map(this::convertToDTO).toList();
+    }
+
+   
+
 }

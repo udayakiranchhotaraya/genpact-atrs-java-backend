@@ -3,6 +3,7 @@ package com.capstone.airlineticketreservationsystem.flights.controllers;
 import com.capstone.airlineticketreservationsystem.flights.dtos.CreateFlightRequest;
 import com.capstone.airlineticketreservationsystem.flights.dtos.FlightDTO;
 import com.capstone.airlineticketreservationsystem.flights.dtos.FlightSearchCriteria;
+import com.capstone.airlineticketreservationsystem.flights.dtos.FlightSearchRequest;
 import com.capstone.airlineticketreservationsystem.flights.dtos.UpdateFlightRequest;
 import com.capstone.airlineticketreservationsystem.flights.services.FlightService;
 import jakarta.validation.Valid;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -87,4 +89,12 @@ public class FlightController {
     public ResponseEntity<String> healthCheck() {
         return new ResponseEntity<>("Flights API is healthy", HttpStatus.OK);
     }
+    
+    @PostMapping("/search")
+    public ResponseEntity<List<FlightDTO>> searchFlights(
+            @Valid @RequestBody FlightSearchRequest request
+    ) {
+        return ResponseEntity.ok(flightService.searchFlights(request));
+    }
+
 }

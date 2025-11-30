@@ -1,6 +1,7 @@
 package com.capstone.airlineticketreservationsystem.flights.repositories;
 
 import java.sql.*;
+import java.time.LocalDate;
 import java.util.*;
 
 import com.capstone.airlineticketreservationsystem.flights.dtos.FlightDTO;
@@ -33,7 +34,8 @@ public class FlightRepositoryImplDAO implements FlightRepositoryDAO {
     @Override
     public Flight save(Flight flight) {
 
-        String sql = "INSERT INTO flights (flights_uuid, airline_id, aircraft_type_id, flight_number, departure_airport_id, arrival_airport_id, scheduled_departure, scheduled_arrival, base_economy_price, base_business_price) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO flights (flights_uuid, airline_id, aircraft_type_id, flight_number, departure_airport_id, arrival_airport_id, scheduled_departure, scheduled_arrival, base_economy_price, base_business_price) "
+        		+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         KeyHolder keyHolder = new GeneratedKeyHolder();
         flight.setFlightUUID(generateUUIDV7().toString());
@@ -82,7 +84,7 @@ public class FlightRepositoryImplDAO implements FlightRepositoryDAO {
         // Main data query with JOINs
         String dataSql = """
             SELECT 
-                f.flight_uuid, f.flight_number,
+                f.flights_uuid, f.flight_number,
                 f.scheduled_departure, f.scheduled_arrival,
                 f.actual_departure, f.actual_arrival,
                 f.status, f.base_economy_price, f.base_business_price,
@@ -156,7 +158,7 @@ public class FlightRepositoryImplDAO implements FlightRepositoryDAO {
 
         String dataSql = """
             SELECT
-                f.flight_uuid, f.flight_number,
+                f.flights_uuid, f.flight_number,
                 f.scheduled_departure, f.scheduled_arrival,
                 f.actual_departure, f.actual_arrival,
                 f.status, f.base_economy_price, f.base_business_price,
@@ -368,7 +370,7 @@ public class FlightRepositoryImplDAO implements FlightRepositoryDAO {
             FlightDTO flightDTO = new FlightDTO();
 
             // Basic flight information
-            flightDTO.setFlightUUID(rs.getString("flight_uuid"));
+            flightDTO.setFlightUUID(rs.getString("flights_uuid"));
             flightDTO.setFlightNumber(rs.getString("flight_number"));
             flightDTO.setScheduledDeparture(rs.getTimestamp("scheduled_departure").toLocalDateTime());
             flightDTO.setScheduledArrival(rs.getTimestamp("scheduled_arrival").toLocalDateTime());
@@ -424,4 +426,104 @@ public class FlightRepositoryImplDAO implements FlightRepositoryDAO {
             return flightDTO;
         }
     }
+    
+    @Override
+    public Optional<Long> findIdByUUID(String flightUUID) {
+        String sql = "SELECT id FROM flights WHERE flights_uuid = ? AND is_deleted = false";
+        try {
+            Long id = jdbcTemplate.queryForObject(sql, Long.class, flightUUID);
+            return Optional.ofNullable(id);
+        } catch (Exception e) {
+            return Optional.empty();
+        }
+    }
+    
+    private final RowMapper<Flight> flightRowMapper = (rs, rowNum) -> {
+        Flight f = new Flight();
+        f.setId(rs.getLong("id"));
+        f.setFlightUUID(rs.getString("flights_uuid"));
+        f.setAirlineId(rs.getLong("airline_id"));
+        f.setAircraftTypeId(rs.getLong("aircraft_type_id"));
+        f.setFlightNumber(rs.getString("flight_number"));
+        f.setDepartureAirportId(rs.getLong("departure_airport_id"));
+        f.setArrivalAirportId(rs.getLong("arrival_airport_id"));
+        f.setScheduledDeparture(rs.getTimestamp("scheduled_departure").toLocalDateTime());
+        f.setScheduledArrival(rs.getTimestamp("scheduled_arrival").toLocalDateTime());
+        f.setActualDeparture(rs.getTimestamp("actual_departure") != null 
+                ? rs.getTimestamp("actual_departure").toLocalDateTime() : null);
+        f.setActualArrival(rs.getTimestamp("actual_arrival") != null
+                ? rs.getTimestamp("actual_arrival").toLocalDateTime() : null);
+        f.setBaseEconomyPrice(rs.getBigDecimal("base_economy_price"));
+        f.setBaseBusinessPrice(rs.getBigDecimal("base_business_price"));
+        f.setStatus(FlightStatus.valueOf(rs.getString("status")));
+        f.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
+        f.setUpdatedAt(rs.getTimestamp("updated_at").toLocalDateTime());
+        return f;
+    };
+
+    @Override
+    public List<Flight> searchFlights(String originCode, String destinationCode, LocalDate date) {
+        String sql = """
+            SELECT f.*
+            FROM flights f
+            JOIN airports a1 ON f.departure_airport_id = a1.id
+            JOIN airports a2 ON f.arrival_airport_id = a2.id
+            WHERE a1.airport_code = ?
+              AND a2.airport_code = ?
+              AND DATE(f.scheduled_departure) = ?
+              AND f.is_deleted = FALSE
+            """;
+
+        return jdbcTemplate.query(sql, ps -> {
+            ps.setString(1, originCode);
+            ps.setString(2, destinationCode);
+            ps.setObject(3, date); // LocalDate accepted
+        }, flightRowMapper);
+    }
+    
+   
+
+    @Override
+    public int reduceSeatCount(Long flightId, String seatClass, int count) {
+        String sql = """
+            UPDATE aircraft_types a
+            JOIN flights f ON f.aircraft_type_id = a.id
+            SET 
+                a.economy_class_seats  = a.economy_class_seats  - (CASE WHEN ? = 'ECONOMY' THEN ? ELSE 0 END),
+                a.business_class_seats = a.business_class_seats - (CASE WHEN ? = 'BUSINESS' THEN ? ELSE 0 END)
+            WHERE f.id = ?
+              AND (
+                    ( ? = 'ECONOMY' AND a.economy_class_seats >= ? ) OR
+                    ( ? = 'BUSINESS' AND a.business_class_seats >= ? )
+                  )
+        """;
+
+        return jdbcTemplate.update(sql,
+                seatClass, count,
+                seatClass, count,
+                flightId,
+                seatClass, count,
+                seatClass, count
+        );
+    }
+
+    @Override
+    public int increaseSeatCount(Long flightId, String seatClass, int count) {
+        String sql = """
+            UPDATE aircraft_types a
+            JOIN flights f ON f.aircraft_type_id = a.id
+            SET 
+                a.economy_class_seats  = a.economy_class_seats  + (CASE WHEN ? = 'ECONOMY' THEN ? ELSE 0 END),
+                a.business_class_seats = a.business_class_seats + (CASE WHEN ? = 'BUSINESS' THEN ? ELSE 0 END)
+            WHERE f.id = ?
+        """;
+
+        return jdbcTemplate.update(sql,
+                seatClass, count,
+                seatClass, count,
+                flightId
+        );
+    }
+
+
 }

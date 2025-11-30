@@ -1,27 +1,23 @@
-package com.capstone.airlineticketreservationsystem.bookings.models;
+package com.capstone.airlineticketreservationsystem.bookings.dtos;
 
+import com.capstone.airlineticketreservationsystem.bookings.models.PassengerType;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-public class Passenger {
+public class PassengerDTO {
 
-    private Long id;
     private String passengersUUID;
     private Long bookingId;
     private Long userId;
     private String firstName;
     private String lastName;
-    private String email; // ⭐ NEW
+    private String email;
     private LocalDate dateOfBirth;
     private String passportNumber;
     private String nationality;
     private PassengerType passengerType;
-    private Boolean isDeleted;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
 
     public String getPassengersUUID() { return passengersUUID; }
     public void setPassengersUUID(String passengersUUID) { this.passengersUUID = passengersUUID; }
@@ -37,8 +33,8 @@ public class Passenger {
 
     public String getLastName() { return lastName; }
     public void setLastName(String lastName) { this.lastName = lastName; }
-
-    public String getEmail() { return email; } // ⭐ NEW
+    
+    public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
 
     public LocalDate getDateOfBirth() { return dateOfBirth; }
@@ -52,9 +48,6 @@ public class Passenger {
 
     public PassengerType getPassengerType() { return passengerType; }
     public void setPassengerType(PassengerType passengerType) { this.passengerType = passengerType; }
-
-    public Boolean getDeleted() { return isDeleted; }
-    public void setDeleted(Boolean deleted) { isDeleted = deleted; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

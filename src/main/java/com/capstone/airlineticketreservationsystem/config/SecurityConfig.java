@@ -28,7 +28,16 @@ public class SecurityConfig {
                                 "/auth/signin",
                                 "/api/users/start-onboarding",
                                 "/api/users/set-password"
-                        ).permitAll()
+                        )
+                        .permitAll()
+                        .requestMatchers("/api/users/profile").authenticated()
+                        .requestMatchers("/api/users/password").authenticated()
+
+                        .requestMatchers("/api/bookings/**").authenticated()
+                        .requestMatchers("/api/passengers/**").authenticated()
+                        .requestMatchers("/api/payments/**").authenticated()
+                        .requestMatchers("/api/refunds/**").authenticated()
+                        .requestMatchers("/api/tickets/**").authenticated()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -36,7 +45,6 @@ public class SecurityConfig {
 
         return http.build();
     }
-
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
