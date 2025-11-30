@@ -113,6 +113,19 @@ public class BookingService {
         }
     }
 
+    public List<BookingDTO> getAllBookingsByUserUUID(String userUUID) {
+        // Get user's internal ID from UUID
+        Long userId = userRepository.findIdByUUID(userUUID)
+                .orElseThrow(() -> new RuntimeException("User not found with UUID: " + userUUID));
+
+        List<Booking> bookings = bookingRepository.findAllBookingsByUserId(userId);
+
+        // Convert to DTOs
+        return bookings.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
     // ================= CONVERTER ====================
     private BookingDTO convertToDTO(Booking booking) {
         BookingDTO dto = new BookingDTO();
