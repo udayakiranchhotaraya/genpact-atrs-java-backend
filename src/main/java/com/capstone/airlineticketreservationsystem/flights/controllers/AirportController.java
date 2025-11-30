@@ -6,6 +6,7 @@ import com.capstone.airlineticketreservationsystem.flights.dtos.UpdateAirportReq
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import com.capstone.airlineticketreservationsystem.flights.services.AirportService;
@@ -25,18 +26,21 @@ public class AirportController {
 
     private final AirportService airportService;
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<AirportDTO> createAirport(@Valid @RequestBody CreateAirportRequest request) {
         AirportDTO createdAirport = airportService.createAirport(request);
         return new ResponseEntity<>(createdAirport, HttpStatus.CREATED);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping(value = "/{airportUUID}")
     public ResponseEntity<AirportDTO> getAirportByUUID(@PathVariable String airportUUID) {
         AirportDTO airport = airportService.getAirportByUUID(airportUUID);
         return new ResponseEntity<>(airport, HttpStatus.OK);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping(value = "/code/{airportCode}")
     public ResponseEntity<AirportDTO> getAirportByCode(@PathVariable String airportCode) {
         AirportDTO airport = airportService.getAirportByCode(airportCode);
@@ -44,18 +48,21 @@ public class AirportController {
     }
 
     // Filtered search endpoints
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping(value = "/search/name")
     public ResponseEntity<List<AirportDTO>> searchAirportsByName(@RequestParam String name) {
         List<AirportDTO> airports = airportService.searchAirportsByName(name);
         return new ResponseEntity<>(airports, HttpStatus.OK);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping(value = "/search/city")
     public ResponseEntity<List<AirportDTO>> searchAirportsByCity(@RequestParam String city) {
         List<AirportDTO> airports = airportService.searchAirportsByCity(city);
         return new ResponseEntity<>(airports, HttpStatus.OK);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping(value = "/search")
     public ResponseEntity<List<AirportDTO>> searchAirports(@RequestParam String q) {
         List<AirportDTO> airports = airportService.searchAirports(q);
@@ -71,6 +78,7 @@ public class AirportController {
         return new ResponseEntity<>(updatedAirport, HttpStatus.OK);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping(value = "/{airportUUID}")
     public ResponseEntity<Map<String, String>> deleteAirport(@PathVariable String airportUUID) {
 

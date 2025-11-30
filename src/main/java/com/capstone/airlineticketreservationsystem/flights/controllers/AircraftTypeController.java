@@ -8,6 +8,7 @@ import java.util.Map;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import com.capstone.airlineticketreservationsystem.flights.dtos.AircraftTypeDTO;
@@ -25,24 +26,28 @@ public class AircraftTypeController {
 
     private final AircraftTypeService aircraftTypeService;
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<AircraftTypeDTO> createAircraftType(@Valid @RequestBody CreateAircraftTypeRequest createAircraftTypeRequest) {
         AircraftTypeDTO createdAircraftType = aircraftTypeService.createAircraftType(createAircraftTypeRequest);
         return new ResponseEntity<>(createdAircraftType, HttpStatus.CREATED);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public ResponseEntity<List<AircraftTypeDTO>> getAllAircraftTypes() {
         List<AircraftTypeDTO> aircraftTypes = aircraftTypeService.getAllAircraftTypes();
         return new ResponseEntity<>(aircraftTypes, HttpStatus.OK);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping(value = "/{aircraftTypeUUID}")
     public ResponseEntity<AircraftTypeDTO> getAircraftTypeByUUID(@PathVariable String aircraftTypeUUID) {
         AircraftTypeDTO aircraftType = aircraftTypeService.getAircraftTypeByUUID(aircraftTypeUUID);
         return new ResponseEntity<>(aircraftType, HttpStatus.OK);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping(value = "/{aircraftTypeUUID}")
     public ResponseEntity<AircraftTypeDTO> updateAircraftType(
             @PathVariable String aircraftTypeUUID,
@@ -52,6 +57,7 @@ public class AircraftTypeController {
         return new ResponseEntity<>(updatedAircraftType, HttpStatus.OK);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping(value = "/{aircraftTypeUUID}")
     public ResponseEntity<Map<String, String>> deleteAircraftType(@PathVariable String aircraftTypeUUID) {
         aircraftTypeService.deleteAircraftTypeByUUID(aircraftTypeUUID);

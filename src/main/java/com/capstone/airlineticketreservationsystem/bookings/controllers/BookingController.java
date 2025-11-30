@@ -6,6 +6,7 @@ import com.capstone.airlineticketreservationsystem.bookings.dtos.UpdateBookingSt
 import com.capstone.airlineticketreservationsystem.bookings.services.BookingService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -33,6 +34,7 @@ public class BookingController {
         return ResponseEntity.ok(bookingService.getBooking(bookingUUID));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public ResponseEntity<List<BookingDTO>> getAll() {
         return ResponseEntity.ok(bookingService.getAllBookings());
