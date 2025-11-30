@@ -19,5 +19,5 @@ public interface BookingRepositoryDAO {
     int expirePendingBookings(int minutes);
 
     Optional<Booking> findById(Long id);
-
+    List<Booking> findAllBookingsByUserId(Long userId);
 }

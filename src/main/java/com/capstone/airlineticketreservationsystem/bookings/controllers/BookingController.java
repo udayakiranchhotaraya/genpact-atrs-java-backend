@@ -4,6 +4,7 @@ import com.capstone.airlineticketreservationsystem.bookings.dtos.BookingDTO;
 import com.capstone.airlineticketreservationsystem.bookings.dtos.CreateBookingRequest;
 import com.capstone.airlineticketreservationsystem.bookings.dtos.UpdateBookingStatusRequest;
 import com.capstone.airlineticketreservationsystem.bookings.services.BookingService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -27,6 +28,13 @@ public class BookingController {
     @PostMapping
     public ResponseEntity<BookingDTO> createBooking(@Valid @RequestBody CreateBookingRequest request) {
         return new ResponseEntity<>(bookingService.createBooking(request), HttpStatus.CREATED);
+    }
+
+    @GetMapping
+    public ResponseEntity<List<BookingDTO>> getAllBookings(HttpServletRequest request) {
+        String userUUID = (String) request.getAttribute("userUUID");
+        List<BookingDTO> bookings = bookingService.getAllBookingsByUserUUID(userUUID);
+        return ResponseEntity.ok(bookings);
     }
 
     @GetMapping("/{bookingUUID}")

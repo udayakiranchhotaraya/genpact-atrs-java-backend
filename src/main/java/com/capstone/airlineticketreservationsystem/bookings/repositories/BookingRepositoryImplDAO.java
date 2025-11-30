@@ -234,4 +234,10 @@ public class BookingRepositoryImplDAO implements BookingRepositoryDAO {
             return Optional.empty();
         }
     }
+
+    @Override
+    public List<Booking> findAllBookingsByUserId(Long userId) {
+        String sql = "SELECT * FROM bookings WHERE user_id = ? AND is_deleted = false ORDER BY created_at DESC";
+        return jdbcTemplate.query(sql, new BookingRowMapper(), userId);
+    }
 }
