@@ -3,7 +3,6 @@ package com.capstone.airlineticketreservationsystem.bookings.repositories;
 import com.capstone.airlineticketreservationsystem.bookings.models.SeatClass;
 import com.capstone.airlineticketreservationsystem.bookings.models.Ticket;
 import com.capstone.airlineticketreservationsystem.bookings.models.TicketStatus;
-import com.capstone.airlineticketreservationsystem.utilities.UUIDV7Generator;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
@@ -14,6 +13,8 @@ import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.util.List;
 import java.util.Optional;
+
+import static com.capstone.airlineticketreservationsystem.utilities.UUIDV7Generator.generateUUIDV7;
 
 @Repository
 public class TicketRepositoryImplDAO implements TicketRepositoryDAO {
@@ -35,7 +36,7 @@ public class TicketRepositoryImplDAO implements TicketRepositoryDAO {
                 """;
 
         if (ticket.getTicketsUUID() == null) {
-            ticket.setTicketsUUID(UUIDV7Generator.generateUUIDV7().toString());
+            ticket.setTicketsUUID(generateUUIDV7().toString());
         }
 
         KeyHolder keyHolder = new GeneratedKeyHolder();
