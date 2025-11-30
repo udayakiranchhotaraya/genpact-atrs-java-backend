@@ -13,6 +13,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
@@ -27,6 +28,7 @@ public class FlightController {
     @Autowired
     private FlightService flightService;
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<FlightDTO> createFlight(@Valid @RequestBody CreateFlightRequest createFlightRequest) {
         FlightDTO createdFlight = flightService.createFlight(createFlightRequest);
@@ -64,6 +66,7 @@ public class FlightController {
         return new ResponseEntity<>(results, HttpStatus.OK);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping(value = "/{flightUUID}")
     public ResponseEntity<FlightDTO> updateFlight(
             @PathVariable String flightUUID,
@@ -73,6 +76,7 @@ public class FlightController {
         return new ResponseEntity<>(updatedFlight, HttpStatus.OK);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{flightUUID}")
     public ResponseEntity<Map<String, String>> deleteFlight(@PathVariable String flightUUID) {
         flightService.deleteFlightByUUID(flightUUID);
