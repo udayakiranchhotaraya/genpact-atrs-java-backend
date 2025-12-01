@@ -28,7 +28,7 @@ public class TicketService {
     public TicketDTO createTicket(CreateTicketRequest request) {
 
         Ticket ticket = new Ticket();
-        ticket.setTicketNumber(UUID.randomUUID().toString().replace("-", "").substring(0, 12));
+//        ticket.setTicketNumber(UUID.randomUUID().toString().replace("-", "").substring(0, 12));
 
         ticket.setBookingId(request.getBookingId());
         ticket.setPassengerId(request.getPassengerId());
