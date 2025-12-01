@@ -42,6 +42,8 @@ import static com.capstone.airlineticketreservationsystem.utilities.TicketPdfGen
 @Service
 public class PaymentService {
 
+    private static final BigDecimal TAX_RATE = new BigDecimal("0.18"); // 18%
+
     private final PaymentRepositoryDAO paymentRepository;
     private final BookingRepositoryDAO bookingRepository;
     private final PassengerRepositoryDAO passengerRepository;
@@ -144,10 +146,32 @@ public class PaymentService {
         var booking = bookingRepository.findById(payment.getBookingId())
                 .orElseThrow(() -> new PaymentCreationException("Booking not found for payment"));
 
-        // 4) Fetch all passengers under that booking
+        // 4) Fetch the flight for this booking
+        Flight flight = flightRepository.findById(booking.getFlightId())
+                .orElseThrow(() -> new PaymentCreationException("Flight not found for booking"));
+
+        // 5) Determine the correct base fare based on the booking's seat class
+        BigDecimal baseFarePerTicket;
+        SeatClass seatClass = booking.getSeatClass();
+
+        switch (seatClass) {
+            case ECONOMY:
+                baseFarePerTicket = flight.getBaseEconomyPrice();
+                break;
+            case BUSINESS:
+                baseFarePerTicket = flight.getBaseBusinessPrice();
+                break;
+            default:
+                throw new PaymentCreationException("Unsupported seat class: " + seatClass);
+        }
+
+        // 6) Calculate taxes as a percentage of the base fare
+        BigDecimal taxAmountPerTicket = baseFarePerTicket.multiply(TAX_RATE);
+
+        // 7) Fetch all passengers under that booking
         List<Passenger> passengers = passengerRepository.findByBookingId(payment.getBookingId());
 
-        // 5) Generate tickets for every passenger
+        // 8) Generate tickets for every passenger
         for (Passenger passenger : passengers) {
             CreateTicketRequest ticket = new CreateTicketRequest();
 
@@ -158,8 +182,8 @@ public class PaymentService {
             ticket.setSeatClass(booking.getSeatClass());
 
             // Set fare information (using your placeholder values)
-            ticket.setBaseFare(BigDecimal.valueOf(3000)); // placeholder
-            ticket.setTaxes(BigDecimal.valueOf(300));     // placeholder
+            ticket.setBaseFare(baseFarePerTicket);
+            ticket.setTaxes(taxAmountPerTicket);
 
             // Create the ticket using your service method
             TicketDTO createdTicket = ticketService.createTicket(ticket);
@@ -200,23 +224,23 @@ public class PaymentService {
         }
         */
 
-        // 6) Generate a single PDF for the entire booking
+        // 9) Generate a single PDF for the entire booking
         byte[] pdf = generateBookingItineraryPdf(booking.getId());
 
-        // 7) Fetch the booking owner's email (primary contact)
+        // 10) Fetch the booking owner's email (primary contact)
         User bookingUser = userRepository.findById(booking.getUserId())
                 .orElseThrow(() -> new UserNotFoundException("User not found for booking"));
         String ownerEmail = bookingUser.getEmail();
         String ownerName = bookingUser.getFirstName();
 
-        // 8) Send the booking itinerary PDF via email
+        // 11) Send the booking itinerary PDF via email
         try {
             emailService.sendTicketEmail(ownerEmail, ownerName, pdf);
         } catch (MessagingException e) {
             throw new RuntimeException("Failed to send booking itinerary email", e);
         }
 
-        // 9) Update booking status → CONFIRMED
+        // 12) Update booking status → CONFIRMED
         booking.setBookingStatus(BookingStatus.CONFIRMED);
         bookingRepository.update(booking);
     }
