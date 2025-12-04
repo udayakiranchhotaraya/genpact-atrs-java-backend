@@ -34,7 +34,7 @@ public class JwtFilter extends OncePerRequestFilter {
         String path = request.getServletPath();
 
         // Skip filter for public endpoints
-        if (path.startsWith("/auth/") || path.startsWith("/api/users/start-onboarding") ||
+        if (path.startsWith("/api/auth/") || path.startsWith("/api/users/start-onboarding") ||
                 path.startsWith("/api/users/set-password")) {
             filterChain.doFilter(request, response);
             return;
@@ -85,7 +85,9 @@ public class JwtFilter extends OncePerRequestFilter {
 
     private String parseJwt(HttpServletRequest request) {
         String headerAuth = request.getHeader("Authorization");
+
         if (headerAuth != null && headerAuth.startsWith("Bearer ")) {
+           
             return headerAuth.substring(7);
         }
         return null;

@@ -29,7 +29,7 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                                "/auth/signin",
+                                "/api/auth/signin",
                                 "/api/users/start-onboarding",
                                 "/api/users/set-password"
                         )
