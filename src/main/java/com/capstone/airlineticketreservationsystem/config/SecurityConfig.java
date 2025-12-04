@@ -1,6 +1,7 @@
 package com.capstone.airlineticketreservationsystem.config;
 
-import com.capstone.airlineticketreservationsystem.security.JwtFilter;
+import com.capstone.airlineticketreservationsystem.security.filters.ExceptionHandlerFilter;
+import com.capstone.airlineticketreservationsystem.security.filters.JwtFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -17,11 +18,13 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
 
-    public SecurityConfig(JwtFilter jwtAuthFilter) {
+    public SecurityConfig(JwtFilter jwtAuthFilter, ExceptionHandlerFilter exceptionHandlerFilter) {
         this.jwtAuthFilter = jwtAuthFilter;
+        this.exceptionHandlerFilter = exceptionHandlerFilter;
     }
 
     private final JwtFilter jwtAuthFilter;
+    private final ExceptionHandlerFilter exceptionHandlerFilter;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -45,6 +48,7 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .addFilterBefore(exceptionHandlerFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

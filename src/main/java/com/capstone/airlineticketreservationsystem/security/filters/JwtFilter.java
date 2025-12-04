@@ -1,4 +1,4 @@
-package com.capstone.airlineticketreservationsystem.security;
+package com.capstone.airlineticketreservationsystem.security.filters;
 
 import com.capstone.airlineticketreservationsystem.users.models.User;
 import com.capstone.airlineticketreservationsystem.users.repositories.UserRepositoryDAO;
